@@ -45,7 +45,7 @@ jobs:
           name: Back-end build
           command: |
              cd backend
-             npm installX
+             npm install
              npm run build
 
       - slack/notify:
