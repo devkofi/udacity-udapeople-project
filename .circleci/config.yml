@@ -49,7 +49,7 @@ jobs:
       # Your job code here
       - command: |
           cd frontend
-          npm start    
+          npm run test    
 
   test-backend:
     docker:
@@ -60,11 +60,11 @@ jobs:
       - checkout
       # Restore from cache
       - restore_cache:
-          keys: [frontend-build]
+          keys: [backend-build]
       # Your job code here
       - commands: |
           cd backend
-          npm start
+          npm run test
 
 workflows:
   default:
