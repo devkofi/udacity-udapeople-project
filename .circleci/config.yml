@@ -133,7 +133,7 @@ workflows:
   default:
     jobs:
       - notify:
-          context: slack-ev
+          context: slack-env
       - build-frontend
       - build-backend
       - test-frontend:
