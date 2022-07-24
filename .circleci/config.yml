@@ -4,20 +4,7 @@ orbs:
   slack: circleci/slack@4.10.1
             
 jobs:
-  notify:
-      docker:
-        - image: cimg/base:stable
-      
-      steps:
-        - slack/notify:
-            event: fail
-            mentions: '@EngineeringTeam'
-            template: basic_fail_1
-        
-        - slack/notify:
-            event: pass
-            template: success_tagged_deploy_1
-
+  
   build-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -31,6 +18,18 @@ jobs:
             cd frontend
             npm install
             npm run build
+      
+      - slack/notify:
+          channel: $SLACK_DEFAULT_CHANNEL
+          event: fail
+          mentions: '@EngineeringTeam'
+          template: basic_fail_1
+        
+      - slack/notify:
+          channel: $SLACK_DEFAULT_CHANNEL
+          event: pass
+          template: success_tagged_deploy_1
+
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
@@ -48,6 +47,18 @@ jobs:
              cd backend
              npm install
              npm run build
+
+      - slack/notify:
+          channel: $SLACK_DEFAULT_CHANNEL
+          event: fail
+          mentions: '@EngineeringTeam'
+          template: basic_fail_1
+        
+      - slack/notify:
+          channel: $SLACK_DEFAULT_CHANNEL
+          event: pass
+          template: success_tagged_deploy_1
+
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
@@ -132,10 +143,10 @@ jobs:
 workflows:
   default:
     jobs:
-      - notify:
+      - build-frontend:
           context: slack-env
-      - build-frontend
-      - build-backend
+      - build-backend:
+          context: slack-env
       - test-frontend:
           requires: [build-frontend]
       - test-backend:
