@@ -62,7 +62,7 @@ jobs:
       - restore_cache:
           keys: [backend-build]
       # Your job code here
-      - commands: |
+      - command: |
           cd backend
           npm run test
 
