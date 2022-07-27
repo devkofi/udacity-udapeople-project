@@ -14,7 +14,7 @@ commands:
           when: on_fail
           command: |
             aws cloudformation delete-stack --stack-name udapeople-backend-<< pipeline.parameters.workflow-id >>
-            aws cloudformation delete-stack --stack-name udapeople-front-end-<< pipeline.parameters.workflow-id >>
+            aws cloudformation delete-stack --stack-name udapeople-frontend-<< pipeline.parameters.workflow-id >>
 
 
 orbs: 
