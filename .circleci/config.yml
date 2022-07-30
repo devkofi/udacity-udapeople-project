@@ -1,5 +1,8 @@
 version: 2.1
 
+#=============================#
+# COMMANDS TO INCLUED IN JOBS #
+#=============================#
 commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -16,12 +19,24 @@ commands:
             aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
 
-
+#=============================#
+# SLACK NOTIFICATION SETUP    #
+#=============================#
 orbs: 
   slack: circleci/slack@4.10.1
-            
+
+#=============================#
+# JOBS TO EXECUTE             #
+#=============================#            
 jobs:
-  
+
+  ###################################################
+  # BUILD FRONT END WITH NOTIFICATIONS              #                                                 
+  #                                                 #
+  #   This will help us setup our front-end and a   #
+  #   notification system using Slack               #
+  #                                                 #
+  ###################################################
   build-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -51,6 +66,14 @@ jobs:
           paths: [frontend/node_modules]
           key: frontend-build
 
+
+  ###################################################
+  # BUILD BACK END WITH NOTIFICATIONS               #                                                 
+  #                                                 #
+  #   This will help us setup our back-end and a    #
+  #   notification system using Slack               #
+  #                                                 #
+  ###################################################
   build-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -80,6 +103,14 @@ jobs:
           paths: [backend/node_modules]
           key: backend-build
 
+
+  ###################################################
+  # TEST FRONT-END                                  #                                                 
+  #                                                 #
+  #   This will help us test our front-end          #
+  #                                                 #
+  #                                                 #
+  ###################################################
   test-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -96,6 +127,13 @@ jobs:
             cd frontend
             npm run test    
 
+  ###################################################
+  # TEST BACK-END                                   #                                                 
+  #                                                 #
+  #   This will help us test our front-end          #
+  #                                                 #
+  #                                                 #
+  ###################################################
   test-backend:
     docker:
       # Docker image here
@@ -115,6 +153,13 @@ jobs:
             cd backend
             npm run test
 
+  ###################################################
+  # CHECK FOR FRONT END VULNERABILITIES             #                                                 
+  #                                                 #
+  #   This will scan our front-end application for  #
+  #   any vulnerabilities                           #
+  #                                                 #
+  ###################################################
   scan-frontend:
     docker:
       # Docker image here
@@ -136,6 +181,13 @@ jobs:
             npm install oauth-sign@^0.9.0
             npm audit fix --audit-level=critical --force
   
+  ###################################################
+  # CHECK FOR BACK-END VULNERABILITIES              #                                                 
+  #                                                 #
+  #   This will scan our back-end application for   #
+  #   any vulnerabilities                           #
+  #                                                 #
+  ###################################################
   scan-backend:
     docker:
       # Docker image here
@@ -157,6 +209,14 @@ jobs:
             npm install oauth-sign@^0.9.0
             npm audit fix --audit-level=critical --force
 
+
+  ###################################################
+  # DEPLOY INFRASTRUCTURE                           #                                                 
+  #                                                 #
+  #   This will help us deploy our infrastructure   #
+  #   for hosting our application                   #
+  #                                                 #
+  ###################################################
   deploy-infrastructure:
     docker:
       # Docker image here that supports AWS CLI
@@ -179,28 +239,64 @@ jobs:
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
               --tags project=udapeople
       - run:
-          name: Ensure front-end infrastructure exist
+          name: Ensure frontend infrastructure exist
           command: |
             aws cloudformation deploy \
-              --template-file .circleci/files/backend.yml \
-              --stack-name "udapeople-front-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --template-file .circleci/files/frontend.yml \
+              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
               --tags project=udapeople
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            echo "[web]" > inventory.txt
+            echo "[web]" > inventory.text
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --output text >> inventory.txt
-
-      - destroy-environment
+              --output text >> inventory.text
       
       - persist_to_workspace:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
+
       # Here's where you will add some code to rollback on failure      
+      - destroy-environment
+  
+
+  ###################################################
+  # CONFIGURE INFRASTRUCTURE                        #                                                 
+  #                                                 #
+  #   This will configure the infrastructure to     #
+  #   help host our application                     #
+  #                                                 #
+  ###################################################
+  configure-infrastructure:
+    docker:
+      # Docker image here that supports Ansible
+      - image: python:3.7-alpine3.11
+    steps:
+      # Checkout code from git
+      - checkout
+
+      # Add ssh keys with fingerprint
+      - add_ssh_keys:
+          fingerprints: ["86:64:b3:f1:e6:89:fc:e0:81:36:ea:45:15:f8:8c:a3"]
+      # attach workspace
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible
+            apk add --update tar
+            apk add --update gzip
+      - run:
+          name: Configure server
+          command: |
+            ls -la
+            cd .circleci/ansible/
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml
+      # Here's where you will add some code to rollback on failure      
+      - destroy-environment
 
 workflows:
   default:
@@ -217,4 +313,10 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
-          
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: [test-feature-branch]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]      
