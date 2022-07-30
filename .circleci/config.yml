@@ -189,10 +189,10 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            echo "[all]" > inventory
+            echo "[web]" > inventory.txt
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --output text >> inventory
+              --output text >> inventory.txt
 
       - destroy-environment
       
