@@ -251,9 +251,9 @@ jobs:
           command: |
             echo "[web]" > inventory.text
             aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --query 'Reservations[*].Instances[*].PublicDnsName' \
               --output text >> inventory.text
-      
+      #--query 'Reservations[*].Instances[*].PublicIpAddress' \
       - persist_to_workspace:
           root: ~/
           paths:
