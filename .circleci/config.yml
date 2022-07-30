@@ -255,9 +255,9 @@ jobs:
               --output text >> inventory.text
       #--query 'Reservations[*].Instances[*].PublicIpAddress' \
       - persist_to_workspace:
-          root: ~/
+          root: .
           paths:
-            - project/.circleci/ansible/inventory.txt
+            - .circleci/ansible/*
 
       # Here's where you will add some code to rollback on failure      
       - destroy-environment
