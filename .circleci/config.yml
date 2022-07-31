@@ -59,6 +59,31 @@ orbs:
 jobs:
 
   ###################################################
+  # SETUP CLOUDFRONT DISTRIBUTION                   #                                                 
+  #                                                 #
+  #   Using the Blue Green Deployment strategy this #
+  #   will help us switch from the old infrastruc-  #
+  #   ture to the new one                           #
+  ###################################################
+  setup-cloudfront:
+    docker:
+      # Docker image here that supports AWS CLI
+      - image: amazon/aws-cli
+    steps:
+      # Checkout code from git
+      - checkout
+
+      - run:
+          name: Setup Cloudfront for deployment
+          command: |
+            cd .circleci/files
+            aws cloudformation deploy \
+              --template-file cloudfront.yml \
+              --stack-name InitialStack\
+              --parameter-overrides WorkflowID=udapeople-kk1j287dhjp437knk
+
+
+  ###################################################
   # BUILD FRONT END WITH NOTIFICATIONS              #                                                 
   #                                                 #
   #   This will help us setup our front-end and a   #
