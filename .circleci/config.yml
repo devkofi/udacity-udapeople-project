@@ -387,6 +387,8 @@ jobs:
 workflows:
   default:
     jobs:
+      - setup-cloudfront
+      
       - build-frontend:
           context: slack-env
       - build-backend:
