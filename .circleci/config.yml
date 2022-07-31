@@ -304,11 +304,10 @@ jobs:
           command: |
             ls -la
             cd .circleci/ansible/
-            echo "[web]" >> inventory.txt
+            echo "[web]" > inventory.txt
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicDnsName' \
               --output text >> inventory.txt
-            cat inventory.txt
       #echo "ansible_ssh_common_args='-o StrictHostKeyChecking=no'" > inventory.txt
       #--query 'Reservations[*].Instances[*].PublicIpAddress' \
       
