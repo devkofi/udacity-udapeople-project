@@ -350,6 +350,21 @@ jobs:
             apk add --update ansible
             apk add --update tar
             apk add --update gzip
+      
+      - run: 
+          name: Host Key Checking
+          command:
+            ansible --version
+            ls ~/ -la
+            echo "============== Viewing /etc/ansible/ansible.cfg ==============="
+            cat /etc/ansible/ansible.cfg
+            echo "============== Viewing /etc/ansible/ansible.cfg ==============="
+            echo "[defaults]" > ~/.ansible.cfg
+            echo "host_key_checking = False" >> ~/.ansible.cfg
+            echo "============== Viewing /etc/ansible/ansible.cfg ==============="
+            cat cat ~/.ansible.cfg
+            echo "============== Viewing /etc/ansible/ansible.cfg ==============="
+
       - run:
           name: Configure server
           command: |
