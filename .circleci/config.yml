@@ -342,7 +342,8 @@ jobs:
           at: ./.circleci/ansible/
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: ["86:64:b3:f1:e6:89:fc:e0:81:36:ea:45:15:f8:8c:a3"]
+          fingerprints: 
+            - "86:64:b3:f1:e6:89:fc:e0:81:36:ea:45:15:f8:8c:a3"
       # attach workspace
       - run:
           name: Install dependencies
@@ -357,6 +358,7 @@ jobs:
           name: Host Key Checking
           command: |
             ansible --version
+            python3 --version
             ls ~/ -la
             if /etc/ansible/ansible.cfg
             then
