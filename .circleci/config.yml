@@ -350,6 +350,7 @@ jobs:
             apk add --update ansible
             apk add --update tar
             apk add --update gzip
+            apk add --update unzip
       
       - run: 
           name: Host Key Checking
@@ -373,8 +374,19 @@ jobs:
             cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
       # Here's where you will add some code to rollback on failure      
-      - destroy-environment
+      
+      - run: 
+          name: Install AWS CLI
+          when: on_fail
+          command: |
+            cd ~/
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            ./aws/install
+            aws --version
 
+      - destroy-environment
+  
   run-migrations:
     docker:
       # Docker image here that supports NodeJS
@@ -402,7 +414,6 @@ workflows:
   default:
     jobs:
       - setup-cloudfront
-
       - build-frontend:
           context: slack-env
       - build-backend:
