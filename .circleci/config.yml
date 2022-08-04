@@ -454,7 +454,7 @@ jobs:
               echo "[all:vars]" >> /etc/ansible/hosts
               echo "ansible_python_interpreter=/usr/bin/python3" >> /etc/ansible/hosts
               echo "============== Viewing /etc/ansible/hosts ==============="
-              cat /etc/ansible/hosts
+              sudo cat /etc/ansible/hosts
               echo "============== Viewing /etc/ansible/hosts ==============="
             else
               cd /etc
@@ -476,7 +476,7 @@ jobs:
               echo "host_key_checking = False" >> /etc/ansible/ansible.cfg
               echo "record_host_keys=False" >> /etc/ansible/ansible.cfg
               echo "============== Viewing /etc/ansible/ansible.cfg ==============="
-              cat /etc/ansible/ansible.cfg
+              sudo cat /etc/ansible/ansible.cfg
               echo "============== Viewing /etc/ansible/ansible.cfg ==============="
             else
               echo "No File Exists"
@@ -493,7 +493,7 @@ jobs:
             if ~/.ansible.cfg
             then
               echo "============== Viewing /etc/ansible/ansible.cfg ==============="
-              cat ~/.ansible.cfg
+              sudo cat ~/.ansible.cfg
               echo "============== Viewing /etc/ansible/ansible.cfg ==============="
             else
               echo ".ansible.cfg does not exist"
