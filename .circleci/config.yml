@@ -513,13 +513,14 @@ jobs:
       - run:
           name: List Hosts
           command: |
-            ls -la
             cd .circleci/ansible/
             cat inventory.txt
             
       - run:
           name: Run Playbook
           command: |
+            ls -la
+            cd .circleci/ansible/
             ansible-playbook -i inventory.txt configure-server.yml
       
       - create-to-destroy
