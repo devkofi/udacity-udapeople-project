@@ -28,7 +28,7 @@ commands:
         default: "${CIRCLE_WORKFLOW_ID:0:7}"
     steps:
       - run:
-          name: Destroy environments
+          name: Destroy aws infrastructure
           when: on_fail
           command: |
             cd $HOME
@@ -445,25 +445,30 @@ jobs:
           # curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
           # python3 get-pip.py --user
       
+      # - run:
+      #     name: Configure Ansible
+      #     command: |
+
+      #       if /etc/ansible/hosts
+      #       then
+      #         echo "[all:vars]" >> /etc/ansible/hosts
+      #         echo "ansible_python_interpreter=/usr/bin/python3" >> /etc/ansible/hosts
+      #         echo "============== Viewing /etc/ansible/hosts ==============="
+      #         sudo cat /etc/ansible/hosts
+      #         echo "============== Viewing /etc/ansible/hosts ==============="
+      #       else
+      #         cd /etc
+      #         mkdir ansible
+      #         cd ansible
+      #         echo "[all:vars]" > hosts
+      #         echo "ansible_python_interpreter=/usr/bin/python3" >> hosts
+      #       fi 
+
       - run:
-          name: Configure Ansible
-          command: |
-
-            if /etc/ansible/hosts
-            then
-              echo "[all:vars]" >> /etc/ansible/hosts
-              echo "ansible_python_interpreter=/usr/bin/python3" >> /etc/ansible/hosts
-              echo "============== Viewing /etc/ansible/hosts ==============="
-              sudo cat /etc/ansible/hosts
-              echo "============== Viewing /etc/ansible/hosts ==============="
-            else
-              cd /etc
-              mkdir ansible
-              cd ansible
-              echo "[all:vars]" > hosts
-              echo "ansible_python_interpreter=/usr/bin/python3" >> hosts
-            fi 
-
+          name: Display Ansible etc/ansible contents
+          command:
+            ls -al /etc
+            ls -al /etc/ansible
       - run: 
           name: Host Key Checking
           command: |
