@@ -463,12 +463,15 @@ jobs:
       - run:
           name: Install Dependencies
           command: |
+            cd backend
             ls
             npm install && npm audit fix
             
       - run:
           name: Run migrations
           command: |
+            cd backend
+            ls
             npm run migrations > migrations_dump.txt
           
       - run:
