@@ -19,6 +19,26 @@ commands:
             aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
 
+  create-to-destroy:
+    description: Installs aws to destroy-environment on fail
+    parameters:
+      # Add parameter here   
+      workflow-id:
+        type: string
+        default: "${CIRCLE_WORKFLOW_ID:0:7}"
+    steps:
+      - run:
+          name: Destroy environments
+          when: on_fail
+          command: |
+            cd $HOME
+            sudo apt install -y curl unzip
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+            aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
     #parameters:
@@ -429,15 +449,19 @@ jobs:
           name: Configure Ansible
           command: |
 
-            echo "[all:vars]" >> /etc/ansible/hosts
-            echo "ansible_python_interpreter=/usr/bin/python3" >> /etc/ansible/hosts
             if /etc/ansible/hosts
             then
+              echo "[all:vars]" >> /etc/ansible/hosts
+              echo "ansible_python_interpreter=/usr/bin/python3" >> /etc/ansible/hosts
               echo "============== Viewing /etc/ansible/hosts ==============="
               cat /etc/ansible/hosts
               echo "============== Viewing /etc/ansible/hosts ==============="
             else
-              echo "No File Exists"
+              cd /etc
+              mkdir ansible
+              cd ansible
+              echo "[all:vars]" > hosts
+              echo "ansible_python_interpreter=/usr/bin/python3" >> hosts
             fi 
 
       - run: 
@@ -448,11 +472,20 @@ jobs:
             ls ~/ -la
             if /etc/ansible/ansible.cfg
             then
+              echo "[defaults]" >> /etc/ansible/ansible.cfg
+              echo "host_key_checking = False" >> /etc/ansible/ansible.cfg
+              echo "record_host_keys=False" >> /etc/ansible/ansible.cfg
               echo "============== Viewing /etc/ansible/ansible.cfg ==============="
               cat /etc/ansible/ansible.cfg
               echo "============== Viewing /etc/ansible/ansible.cfg ==============="
             else
               echo "No File Exists"
+              cd /etc
+              mkdir ansible
+              cd ansible
+              echo "[defaults]" > /etc/ansible/ansible.cfg
+              echo "host_key_checking = False" >> ansible.cfg
+              echo "record_host_keys=False" >> ansible.cfg
             fi
             echo "[defaults]" > ~/.ansible.cfg
             echo "host_key_checking = False" >> ~/.ansible.cfg
@@ -478,6 +511,7 @@ jobs:
           command: |
             ansible-playbook -i inventory.txt configure-server.yml
       
+      - create-to-destroy
       
       # - run: 
       #     name: Install Ansible
