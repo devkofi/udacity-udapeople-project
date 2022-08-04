@@ -35,6 +35,11 @@
     path: ~/web
     state: directory
 
+- name: Creates test directory
+  shell: |
+    mkdir test1
+    mkdir /home/ubuntu/test2
+
 - name: Copy index test page
   template:
     src: "files/index.js"
