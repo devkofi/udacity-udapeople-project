@@ -468,41 +468,47 @@ jobs:
           name: Display Ansible etc/ansible contents
           command: |
             ls -al /etc/ansible
-            
+
       - run: 
           name: Host Key Checking
           command: |
             ansible --version
             python3 --version
-            ls ~/ -la
-            if /etc/ansible/ansible.cfg
-            then
-              echo "[defaults]" >> /etc/ansible/ansible.cfg
-              echo "host_key_checking = False" >> /etc/ansible/ansible.cfg
-              echo "record_host_keys=False" >> /etc/ansible/ansible.cfg
-              echo "============== Viewing /etc/ansible/ansible.cfg ==============="
-              sudo cat /etc/ansible/ansible.cfg
-              echo "============== Viewing /etc/ansible/ansible.cfg ==============="
-            else
-              echo "No File Exists"
-              cd /etc
-              mkdir ansible
-              cd ansible
-              echo "[defaults]" > /etc/ansible/ansible.cfg
-              echo "host_key_checking = False" >> ansible.cfg
-              echo "record_host_keys=False" >> ansible.cfg
-            fi
             echo "[defaults]" > ~/.ansible.cfg
             echo "host_key_checking = False" >> ~/.ansible.cfg
             echo "record_host_keys=False" >> ~/.ansible.cfg
-            if ~/.ansible.cfg
-            then
-              echo "============== Viewing /etc/ansible/ansible.cfg ==============="
-              sudo cat ~/.ansible.cfg
-              echo "============== Viewing /etc/ansible/ansible.cfg ==============="
-            else
-              echo ".ansible.cfg does not exist"
-            fi
+            
+          # ls ~/ -la
+          # if /etc/ansible/ansible.cfg
+          # then
+          #   echo "[defaults]" >> /etc/ansible/ansible.cfg
+          #   echo "host_key_checking = False" >> /etc/ansible/ansible.cfg
+          #   echo "record_host_keys=False" >> /etc/ansible/ansible.cfg
+          #   echo "============== Viewing /etc/ansible/ansible.cfg ==============="
+          #   sudo cat /etc/ansible/ansible.cfg
+          #   echo "============== Viewing /etc/ansible/ansible.cfg ==============="
+          # else
+          #   echo "No File Exists"
+          #   cd /etc
+          #   mkdir ansible
+          #   cd ansible
+          #   echo "[defaults]" > /etc/ansible/ansible.cfg
+          #   echo "host_key_checking = False" >> ansible.cfg
+          #   echo "record_host_keys=False" >> ansible.cfg
+          # fi
+          # echo "[defaults]" > ~/.ansible.cfg
+          # echo "host_key_checking = False" >> ~/.ansible.cfg
+          # echo "record_host_keys=False" >> ~/.ansible.cfg
+          # if ~/.ansible.cfg
+          # then
+          #   echo "============== Viewing /etc/ansible/ansible.cfg ==============="
+          #   sudo cat ~/.ansible.cfg
+          #   echo "============== Viewing /etc/ansible/ansible.cfg ==============="
+          # else
+          #   echo ".ansible.cfg does not exist"
+          # fi
+
+            
 
       - run:
           name: List Hosts
