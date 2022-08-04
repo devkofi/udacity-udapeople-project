@@ -457,7 +457,7 @@ jobs:
             node --version
             cd backend
             sudo npm install -g npm-check-updates &&
-            ncu -u && npm install 
+            ncu -u && npm install && npm audit fix
             npm run migrations > migrations_dump.txt
           #npm install && npm audit fix
 
