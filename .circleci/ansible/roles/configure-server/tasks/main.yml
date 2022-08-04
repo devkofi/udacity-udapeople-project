@@ -1,28 +1,28 @@
 ---
-- name: "update apt packages."
+- name: "Update apt packages."
   become: true
   apt:
     update_cache: yes
 
-- name: "upgrade packages"
+- name: "Upgrade packages"
   become: true
   apt:
     upgrade: yes
 
 
-- name: remove dependencies that are no longer required
+- name: Remove dependencies that are no longer required
   become: true
   apt:
     autoremove: yes
 
-- name: "install dependencies."
+- name: "Install dependencies."
   become: true
   apt:
     name: ["nodejs", "npm"]
     state: latest
     update_cache: yes
 
-- name: "install pm2"
+- name: "Install pm2"
   become: true
   npm:
     name: pm2
@@ -30,21 +30,20 @@
     production: yes
     state: present
 
-- name: Creates directory
-  file:
-    path: ~/web
-    state: directory
+# - name: Creates directory
+#   file:
+#     path: ~/web
+#     state: directory
 
-- name: Creates test directory
+- name: Create directory
   shell: |
-    mkdir test1
-    mkdir /home/ubuntu/test2
+    mkdir web
 
-- name: Copy index test page
+- name: Copy index.js to web directory
   template:
     src: "files/index.js"
-    dest: "~/web/index.js"
+    dest: "/home/ubuntu/web/index.js"
 
-- name: Executing node
+- name: Start server @ port 3030
   shell: |
-    pm2 start ~/web/index.js -f
+    pm2 start /home/ubuntu/web/index.js -f
