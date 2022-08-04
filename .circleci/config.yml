@@ -466,9 +466,9 @@ jobs:
 
       - run:
           name: Display Ansible etc/ansible contents
-          command:
-            ls -al /etc
+          command: |
             ls -al /etc/ansible
+            
       - run: 
           name: Host Key Checking
           command: |
