@@ -331,29 +331,115 @@ jobs:
   #   help host our application                     #
   #                                                 #
   ###################################################
+  # configure-infrastructure:
+  #   docker:
+  #     # Docker image here that supports Ansible
+  #     - image: python:3.7-alpine3.11
+  #   steps:
+  #     # Checkout code from git
+  #     - checkout
+  #     - attach_workspace:
+  #         at: ./.circleci/ansible/
+  #     # Add ssh keys with fingerprint
+  #     - add_ssh_keys:
+  #         fingerprints: ["86:64:b3:f1:e6:89:fc:e0:81:36:ea:45:15:f8:8c:a3"]
+  #           #- "86:64:b3:f1:e6:89:fc:e0:81:36:ea:45:15:f8:8c:a3"
+  #     # attach workspace
+  #     - run:
+  #         name: Install dependencies
+  #         command: |
+  #           apk add --update ansible
+  #           apk add --update tar
+  #           apk add --update gzip
+  #           apk add --update unzip
+  #           apk add --update curl
+      
+  #     - run: 
+  #         name: Host Key Checking
+  #         command: |
+  #           ansible --version
+  #           python3 --version
+  #           ls ~/ -la
+  #           if /etc/ansible/ansible.cfg
+  #           then
+  #             echo "============== Viewing /etc/ansible/ansible.cfg ==============="
+  #             cat /etc/ansible/ansible.cfg
+  #             echo "============== Viewing /etc/ansible/ansible.cfg ==============="
+  #           else
+  #             echo "No File Exists"
+  #           fi
+  #           echo "[defaults]" > ~/.ansible.cfg
+  #           echo "host_key_checking = False" >> ~/.ansible.cfg
+  #           echo "record_host_keys=False" >> ~/.ansible.cfg
+  #           if ~/.ansible.cfg
+  #           then
+  #             echo "============== Viewing /etc/ansible/ansible.cfg ==============="
+  #             cat ~/.ansible.cfg
+  #             echo "============== Viewing /etc/ansible/ansible.cfg ==============="
+  #           else
+  #             echo ".ansible.cfg does not exist"
+  #           fi
+
+  #     - run:
+  #         name: Configure server
+  #         command: |
+  #           ls -la
+  #           cd .circleci/ansible/
+  #           cat inventory.txt
+  #           ansible-playbook -i inventory.txt configure-server.yml
+  #     # Here's where you will add some code to rollback on failure      
+      
+  #     # - run: 
+  #     #     name: Install AWS CLI
+  #     #     when: on_fail
+  #     #     command: |
+  #     #       cd ~/
+  #     #       curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  #     #       unzip awscliv2.zip
+  #     #       cd aws
+  #     #       ./install
+  #     #       aws --version
+
+  #     # - destroy-environment
+  
   configure-infrastructure:
     docker:
-      # Docker image here that supports Ansible
-      - image: python:3.7-alpine3.11
+      - image: cimg/base:2022.08
     steps:
-      # Checkout code from git
       - checkout
       - attach_workspace:
           at: ./.circleci/ansible/
       # Add ssh keys with fingerprint
       - add_ssh_keys:
-          fingerprints: 
-            - "86:64:b3:f1:e6:89:fc:e0:81:36:ea:45:15:f8:8c:a3"
-      # attach workspace
-      - run:
-          name: Install dependencies
+          fingerprints: ["86:64:b3:f1:e6:89:fc:e0:81:36:ea:45:15:f8:8c:a3"]
+            #- "86:64:b3:f1:e6:89:fc:e0:81:36:ea:45:15:f8:8c:a3"
+      # Whatever you want to do
+      - run: 
+          name: Install Ansible
           command: |
-            apk add --update ansible
-            apk add --update tar
-            apk add --update gzip
-            apk add --update unzip
-            apk add --update curl
+            apt update 
+            apt install -y ansible
+            which ansible
+            ansible --version
+          # sudo apt-get install -y curl tar gzip unzip
+          # curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+          # python3 get-pip.py --user
       
+      - run:
+          name: Configure Ansible
+          command: |
+
+            echo "[all:vars]" >> /etc/ansible/hosts
+            echo "ansible_python_interpreter=/usr/bin/python3" >> /etc/ansible/hosts
+            if /etc/ansible/hosts
+            then
+              echo "============== Viewing /etc/ansible/hosts ==============="
+              cat /etc/ansible/hosts
+              echo "============== Viewing /etc/ansible/hosts ==============="
+            else
+              echo "No File Exists"
+            fi 
+            
       - run: 
           name: Host Key Checking
           command: |
@@ -381,27 +467,26 @@ jobs:
             fi
 
       - run:
-          name: Configure server
+          name: List Hosts
           command: |
             ls -la
             cd .circleci/ansible/
             cat inventory.txt
+            
+      - run:
+          name: Run Playbook
+          command: |
             ansible-playbook -i inventory.txt configure-server.yml
-      # Here's where you will add some code to rollback on failure      
+      
       
       # - run: 
-      #     name: Install AWS CLI
-      #     when: on_fail
+      #     name: Install Ansible
       #     command: |
-      #       cd ~/
-      #       curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      #       unzip awscliv2.zip
-      #       cd aws
-      #       ./install
-      #       aws --version
+      #       python3 -m pip install --user ansible
+      #       export PATH=$PATH:/.local/bin
+      #       source ~/.bash_profile
+      #       ansible --version
 
-      # - destroy-environment
-  
   run-migrations:
     docker:
       # Docker image here that supports NodeJS
