@@ -417,8 +417,8 @@ jobs:
       - run: 
           name: Install Ansible
           command: |
-            apt update 
-            apt install -y ansible
+            sudo apt-get update &&
+            sudo apt install -y ansible
             which ansible
             ansible --version
           # sudo apt-get install -y curl tar gzip unzip
@@ -439,7 +439,7 @@ jobs:
             else
               echo "No File Exists"
             fi 
-            
+
       - run: 
           name: Host Key Checking
           command: |
