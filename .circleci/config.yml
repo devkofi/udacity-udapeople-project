@@ -445,33 +445,37 @@ jobs:
   run-migrations:
     docker:
       # Docker image here that supports NodeJS
-      #- image: circleci/node:13.8.0
-      - image: cimg/node:18.7.0
+      - image: circleci/node:13.8.0
+      #- image: cimg/node:18.7.0
     steps:
       # Checkout code from git
       - checkout
+      
+      - restore_cache:
+          keys: [backend-build]
+      
+      # - run:
+      #     name: Update Package
+      #     command: |
+      #       node --version
+      #       cd backend
+      #       sudo npm install -g npm-check-updates &&
+      #       sudo ncu -u
+      #     #npm install && npm audit fix
 
-      - run:
-          name: Update Package
-          command: |
-            node --version
-            cd backend
-            sudo npm install -g npm-check-updates &&
-            sudo ncu -u
-          #npm install && npm audit fix
-
-      - run:
-          name: Install Dependencies
-          command: |
-            cd backend
-            ls
-            npm install && npm audit fix
+      # - run:
+      #     name: Install Dependencies
+      #     command: |
+      #       cd backend
+      #       ls
+      #       npm install && npm audit fix
             
       - run:
           name: Run migrations
           command: |
-            cd backend
             ls
+            cd backend
+            npm install
             npm run migrations > migrations_dump.txt
           
       - run:
