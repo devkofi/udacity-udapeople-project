@@ -487,13 +487,13 @@ jobs:
             echo "TYPEORM_DATABASE=$TYPEORM_DATABASE" >> .env
             cat .env
 
-      - run:
-          name: Update Package
-          command: |
-            node --version
-            cd backend
-            sudo npm install -g npm-check-updates &&
-            sudo ncu -u
+      # - run:
+      #     name: Update Package
+      #     command: |
+      #       node --version
+      #       cd backend
+      #       sudo npm install -g npm-check-updates &&
+      #       sudo ncu -u
           #npm install && npm audit fix
       
       - run:
