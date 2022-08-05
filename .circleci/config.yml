@@ -509,19 +509,19 @@ jobs:
       #       npm install
           #npm install && npm audit fix --force
 
-      - run:
-          name: Migrations Create
-          command: |
-            cd backend
-            npm run premigrations:create
-            npm run migrations:create
+      # - run:
+      #     name: Migrations Create
+      #     command: |
+      #       cd backend
+      #       npm run premigrations:create
+      #       npm run migrations:create
       
-      - run:
-          name: Migrations Generate
-          command: |
-            cd backend
-            npm run premigrations:generate
-            npm run migrations:generate
+      # - run:
+      #     name: Migrations Generate
+      #     command: |
+      #       cd backend
+      #       npm run premigrations:generate
+      #       npm run migrations:generate
 
       - run:
           name: Run Migrations
