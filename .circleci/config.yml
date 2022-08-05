@@ -501,7 +501,7 @@ jobs:
           command: |
             cd backend
             ls
-            npm install && npm audit fix
+            npm install && npm audit fix --force
 
       - run:
           name: Migrations Create
