@@ -461,14 +461,14 @@ jobs:
   run-migrations:
     docker:
       # Docker image here that supports NodeJS
-      #- image: circleci/node:13.8.0
-      - image: cimg/node:18.7.0
+      - image: circleci/node:13.8.0
+      #- image: cimg/node:18.7.0
     steps:
       # Checkout code from git
       - checkout
 
-      # - restore_cache:
-      #     keys: [backend-build]
+      - restore_cache:
+          keys: [backend-build]
       
       - run:
           name: Environment Variables
@@ -487,42 +487,48 @@ jobs:
             echo "TYPEORM_DATABASE=$TYPEORM_DATABASE" >> .env
             cat .env
 
-      - run:
-          name: Update Package
-          command: |
-            node --version
-            cd backend
-            sudo npm install -g npm-check-updates &&
-            sudo ncu -u
+      # - run:
+      #     name: Update Package
+      #     command: |
+      #       node --version
+      #       cd backend
+      #       sudo npm install -g npm-check-updates &&
+      #       sudo ncu -u
           # npm install && npm audit fix
       
-      - run:
-          name: Install Dependencies
-          command: |
-            cd backend
-            ls
-            sudo npm install && npm audit fix --force
+      # - run:
+      #     name: Clean Node Cache
+      #     command: |
+      #       npm cache clean –force
+
+      # - run:
+      #     name: Install Dependencies
+      #     command: |
+      #       cd backend
+      #       ls
+      #       npm install
+          #npm install && npm audit fix --force
 
       - run:
           name: Migrations Create
           command: |
             cd backend
-            sudo npm run premigrations:create
-            sudo npm run migrations:create
+            npm run premigrations:create
+            npm run migrations:create
       
       - run:
           name: Migrations Generate
           command: |
             cd backend
-            sudo npm run premigrations:generate
-            sudo npm run migrations:generate
+            npm run premigrations:generate
+            npm run migrations:generate
 
       - run:
           name: Run Migrations
           command: |
             cd backend
-            sudo npm run premigrations
-            sudo npm run migrations > migrations_dump.txt
+            npm run premigrations
+            npm run migrations > migrations_dump.txt
                 
       # - run:
       #     name: Run migrations
