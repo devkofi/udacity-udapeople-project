@@ -460,8 +460,8 @@ jobs:
   run-migrations:
     docker:
       # Docker image here that supports NodeJS
-      - image: circleci/node:13.8.0
-      #- image: cimg/node:18.7.0
+      #- image: circleci/node:13.8.0
+      - image: cimg/node:18.7.0
     steps:
       # Checkout code from git
       - checkout
@@ -472,7 +472,7 @@ jobs:
       - run:
           name: Environment Variables
           command: |
-            cd back-end
+            cd backend
             echo NODE_ENV=local > .env
             echo VERSION=1 >> .env
             echo TYPEORM_CONNECTION=$(TYPEORM_CONNECTION) >> .env
