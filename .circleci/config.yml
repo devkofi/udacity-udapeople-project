@@ -487,42 +487,42 @@ jobs:
             echo "TYPEORM_DATABASE=$TYPEORM_DATABASE" >> .env
             cat .env
 
-      # - run:
-      #     name: Update Package
-      #     command: |
-      #       node --version
-      #       cd backend
-      #       sudo npm install -g npm-check-updates &&
-      #       sudo ncu -u
-          #npm install && npm audit fix
+      - run:
+          name: Update Package
+          command: |
+            node --version
+            cd backend
+            sudo npm install -g npm-check-updates &&
+            sudo ncu -u
+          # npm install && npm audit fix
       
       - run:
           name: Install Dependencies
           command: |
             cd backend
             ls
-            npm install && npm audit fix --force
+            sudo npm install && npm audit fix --force
 
       - run:
           name: Migrations Create
           command: |
             cd backend
-            npm run premigrations:create
-            npm run migrations:create
+            sudo npm run premigrations:create
+            sudo npm run migrations:create
       
       - run:
           name: Migrations Generate
           command: |
             cd backend
-            npm run premigrations:generate
-            npm run migrations:generate
+            sudo npm run premigrations:generate
+            sudo npm run migrations:generate
 
       - run:
           name: Run Migrations
           command: |
             cd backend
-            npm run premigrations
-            npm run migrations > migrations_dump.txt
+            sudo npm run premigrations
+            sudo npm run migrations > migrations_dump.txt
                 
       # - run:
       #     name: Run migrations
