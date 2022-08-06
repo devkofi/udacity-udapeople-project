@@ -549,9 +549,9 @@ jobs:
             export ID=$(curl -d "email=${EMAIL_ADDRESS}" https://kvdb.io)   
             if grep -q "has been executed successfully." ./migrations_dump.txt
             then
-                curl https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+                curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             else
-                curl https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
+                curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
             fi
             export SUCCESS=$(curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7})
             echo SUCCESS=$(SUCCESS)      
