@@ -694,7 +694,7 @@ jobs:
 
       # Restore from cache
       - restore_cache:
-          keys: [frontend-build]
+          keys: [backend-build]
 
       - attach_workspace:
           at: ./.circleci/ansible/
@@ -847,7 +847,7 @@ workflows:
       - deploy-frontend:
           requires: [run-migrations, setup-s3-bucket]
       - deploy-backend:
-          requires: [run-migrations]
+          requires: [run-migrations, deploy-frontend]
 
       # - destroy-aws-infrastructure
 
