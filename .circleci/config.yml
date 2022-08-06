@@ -60,32 +60,6 @@ commands:
               npm run migriations:revert
             fi
 
-  # revert-migrations:
-  #   description: Revert the last migration if successfully run in the current workflow.
-  #   #parameters:
-  #     # Add parameter here     
-  #   steps:
-  #     - run:
-  #         name: Revert migrations
-  #         # Add when this will run
-  #         command: |
-  #           # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-  #           SUCCESS=1
-  #           URL="https://blog.udacity.com/"
-  #           if curl -s --head ${URL} 
-  #           then
-  #             return SUCCESS
-  #           else
-  #             SUCCESS=0
-  #             return SUCCESS
-  #           fi
-
-  #           if(( $SUCCESS==1 )); 
-  #           then
-  #             cd ~/project/backend
-  #             npm install
-  #             npm migriations:revert
-  #           fi
 
 #=============================#
 # SLACK NOTIFICATION SETUP    #
@@ -581,7 +555,11 @@ jobs:
             fi
             export SUCCESS=$(curl https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7})
             echo SUCCESS=$(SUCCESS)      
-     
+      
+      - persist_to_workspace:
+            root: ./.circleci/backend
+            paths:
+              - .env
      # Here's where you will add some code to rollback on failure      
       - create-to-destroy
 
@@ -592,12 +570,14 @@ jobs:
       - image: cimg/base:2022.08
     steps:
       - checkout
+
+      # Restore from cache
+      - restore_cache:
+          keys: [frontend-build]
+
       - attach_workspace:
-          at: ./.circleci/ansible/
-      # Add ssh keys with fingerprint
-      - add_ssh_keys:
-          fingerprints: ["86:64:b3:f1:e6:89:fc:e0:81:36:ea:45:15:f8:8c:a3"]
-            #- "86:64:b3:f1:e6:89:fc:e0:81:36:ea:45:15:f8:8c:a3"
+          at: ./.circleci/backend
+      
       # Whatever you want to do
       - run: 
           name: Install Ansible
@@ -622,116 +602,65 @@ jobs:
             sudo ./aws/install
 
       - run: 
-          name: Install AWS CLI
+          name: Install NodeJs and NPM
           command: |
             cd $HOME
             sudo apt install -y nodejs npm
             node --version
             npm --version
 
-      # - run:
-      #     name: Get backend url
-      #     command: |
-      #       # your code here
-      #       export API_URL="http://${BACKEND_IP}:3030"
-      #       echo "${API_URL}"
-      # - run:
-      #     name: Deploy frontend objects
-      #     command: |
-      #       # your code here
+      - run:
+          name: Get backend url
+          command: |
+            ls -la
+            export BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --output text)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "API_URL = ${API_URL}"
+            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
+            cat frontend/.env
+      
+      - run:
+          name: Deploy frontend objects
+          command: |
+            cd frontend
+            npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      
       # Here's where you will add some code to rollback on failure      
-              
-  # deploy-frontend:
-  #   docker:
-  #     # Docker image here that supports AWS CLI
-  #     - image: cimg/base:2022.08
-  #   steps:
-  #     # Checkout code from git
-  #     - checkout
-  #     - run:
-  #         name: Update Packages and Install Curl
-  #         command: |
-  #           yum update -y
-  #           yum install -y curl
-      
-  #     - run: 
-  #         name: Install Python
-  #         command: |
-  #           yum install -y python3
-  #           python3 --version
-  #           python3 -m pip -V
+      - destroy-environment
 
-  #     - run: 
-  #         name: Install Ansible
-  #         command: |
-  #           ls -al
-  #           python3 -m pip install --user ansible
-  #           export PATH=$PATH:/.local/bin
-  #           ansible --version
-      
-  #     - run: 
-  #         name: Install Node
-  #         command: |
-  #           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash &&
-  #           nvm --version
-  #           nvm install node &&
-  #           node --version
-  #           npm --version
-    
-      
-  #     # - run:
-  #     #     name: Install Python
-  #     #     command: |
-  #     #       # your code here
-      
-  #     # - run:
-  #     #     name: Install Ansible
-  #     #     command: |
-  #     #       # your code here
-      
-  #     # - run:
-  #     #     name: Install Python
-  #     #     command: |
-  #     #       # your code here
+      - revert-migrations
 
-  #     # - run:
-  #     #     name: Get backend url
-  #     #     command: |
-  #     #       # your code here
-  #     #       export API_URL="http://${BACKEND_IP}:3030"
-  #     #       echo "${API_URL}"
-  #     # - run:
-  #     #     name: Deploy frontend objects
-  #     #     command: |
-  #     #       # your code here
-  #     # # Here's where you will add some code to rollback on failure      
-  
 workflows:
   default:
     jobs:
-      # - setup-cloudfront
-      # - setup-s3-bucket:
-      #     requires: [setup-cloudfront]
-      # - build-frontend:
-      #     context: slack-env
-      # - build-backend:
-      #     context: slack-env
-      # - test-frontend:
-      #     requires: [build-frontend]
-      # - test-backend:
-      #     requires: [build-backend]
-      # - scan-backend:
-      #     requires: [build-backend]
-      # - scan-frontend:
-      #     requires: [build-frontend]
-      # - deploy-infrastructure:
-      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-      #     #filters:
-      #       #branches:
-      #         #only: [test-feature-branch]
-      # - configure-infrastructure:
-      #     requires: [deploy-infrastructure]
-      # - run-migrations:
-      #     requires: [configure-infrastructure]
-      - deploy-frontend
+      - setup-cloudfront
+      - setup-s3-bucket:
+          requires: [setup-cloudfront]
+      - build-frontend:
+          context: slack-env
+      - build-backend:
+          context: slack-env
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]
+      - scan-backend:
+          requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          #filters:
+            #branches:
+              #only: [test-feature-branch]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
       
