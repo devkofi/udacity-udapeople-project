@@ -597,10 +597,33 @@ jobs:
       # Checkout code from git
       - checkout
       - run:
-          name: Check Linux version
+          name: Update Packages
           command: |
-            sudo apt install ansible
-
+            yum update -y
+      
+      - run: 
+          name: Install Ansible
+          command: |
+            yum install -y ansible
+            which ansible
+            ansible --version
+      
+      - run: 
+          name: Install Node
+          command: |
+            yum install curl
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash &&
+            nvm --version
+            nvm install node &&
+            node --version
+            npm --version
+    
+      - run: 
+          name: Install Python
+          command: |
+            yum install -y python3
+            source ~/.bash_profile
+            python3 --version
       # - run:
       #     name: Install Python
       #     command: |
