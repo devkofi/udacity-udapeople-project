@@ -590,6 +590,7 @@ jobs:
       - run:
           name: Revert Migrations
           command: |
+            ls
             cd backend
             npm run migriations:revert
       
@@ -693,5 +694,6 @@ workflows:
       #     requires: [run-migrations, s3-bucket]
       - run-migrations
 
-      - intentionally-revert-migrations
+      - intentionally-revert-migrations:
+          requires: [run-migrations]
       
