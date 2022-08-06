@@ -553,7 +553,7 @@ jobs:
             else
                 curl https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
             fi
-            export SUCCESS=$(curl https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7})
+            export SUCCESS=$(curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7})
             echo SUCCESS=$(SUCCESS)      
       
       - persist_to_workspace:
