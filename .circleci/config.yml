@@ -677,7 +677,4 @@ workflows:
       # - deploy-frontend:
       #     requires: [run-migrations, s3-bucket]
       - run-migrations
-
-      - intentionally-revert-migrations:
-          requires: [run-migrations]
       
