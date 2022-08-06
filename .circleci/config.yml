@@ -599,7 +599,7 @@ jobs:
       - run:
           name: Check Linux version
           command: |
-            lsb_release -a
+            sudo apt install ansible
 
       # - run:
       #     name: Install Python
