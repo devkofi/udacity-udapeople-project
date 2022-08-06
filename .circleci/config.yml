@@ -755,10 +755,10 @@ jobs:
             npm run build
             
       - run:
-          name: Zip Backend Directory for Export
+          name: Zip Backend Directory without node_modules directory for Export
           command: |
             ls
-            tar -zcvf artifact.tar.gz backend
+            tar -zcvf artifact.tar.gz --exclude="backend/node_modules" backend
 
       - run:
           name: Export to for ansible operations
@@ -775,6 +775,7 @@ jobs:
       - run:
           name: Run Playbook to Deploy Backend
           command: |
+            cd .circleci/ansible/
             ansible-playbook -i inventory.txt deploy-backend.yml
         
       #Uncompress
