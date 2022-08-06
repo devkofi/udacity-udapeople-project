@@ -653,7 +653,13 @@ jobs:
       # Checkout code from git
       - checkout
 
-      - destroy-environment
+      - run:
+          name: Destroying Infrastructure
+          command: |
+            aws cloudformation delete-stack --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
 
   destroy-migrations:
       docker:
@@ -667,7 +673,12 @@ jobs:
         - restore_cache:
             keys: [backend-build]
         
-        - revert-migrations
+        - run:
+            name: Destroying ORM Infrastructure
+            command: |
+              cd backend
+              npm run premigriations:revert
+              npm run migriations:revert
 
 workflows:
   default:
