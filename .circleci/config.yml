@@ -543,7 +543,7 @@ jobs:
       - run:
           name: Send migration results to kvdb.io
           command: |
-            cd back-end
+            cd backend
             ls -la
             sudo apt install -y curl
             export ID=$(curl -d "email=${EMAIL_ADDRESS}" https://kvdb.io)   
