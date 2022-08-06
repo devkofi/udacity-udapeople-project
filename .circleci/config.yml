@@ -547,13 +547,19 @@ jobs:
             ls -la
             sudo apt install -y curl
             export ID=$(curl -d "email=${EMAIL_ADDRESS}" https://kvdb.io)   
+            # if grep -q "has been executed successfully." ./migrations_dump.txt
+            # then
+            #     curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+            # else
+            #     curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
+            # fi
             if grep -q "has been executed successfully." ./migrations_dump.txt
             then
-                curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+                curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             else
-                curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
+                curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
             fi
-            export SUCCESS=$(curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7})
+            export SUCCESS=$(curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7})
             echo SUCCESS=$SUCCESS      
       
       - persist_to_workspace:
