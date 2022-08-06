@@ -56,8 +56,8 @@ commands:
             if($SUCCESS==0); 
             then
               cd backend
-              npm run premigriations:revert
-              npm run migriations:revert
+              npm run premigrations:revert
+              npm run migrations:revert
             fi
 
 
@@ -675,8 +675,8 @@ jobs:
             command: |
               cd backend
               npm install
-              npm run premigriations:revert
-              npm run migriations:revert
+              npm run premigrations:revert
+              npm run migrations:revert
 
 workflows:
   default:
