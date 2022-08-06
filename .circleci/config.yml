@@ -554,10 +554,10 @@ jobs:
                 curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
             fi
             export SUCCESS=$(curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7})
-            echo SUCCESS=$(SUCCESS)      
+            echo SUCCESS=$SUCCESS      
       
       - persist_to_workspace:
-            root: ./.circleci/backend
+            root: ./backend
             paths:
               - .env
      # Here's where you will add some code to rollback on failure      
@@ -576,7 +576,7 @@ jobs:
           keys: [frontend-build]
 
       - attach_workspace:
-          at: ./.circleci/backend
+          at: ./backend
       
       # Whatever you want to do
       - run: 
