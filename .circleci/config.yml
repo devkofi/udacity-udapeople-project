@@ -42,7 +42,26 @@ commands:
             aws cloudformation delete-stack --stack-name udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+  
+  create-to-revert-migrations:
+    description: Revert all database migrations
+    steps:
+      - run: 
+          name: Install NodeJs and NPM
+          command: |
+            cd $HOME
+            sudo apt install -y nodejs npm
+            node --version
+            npm --version
 
+      - run:
+          name: Revert migrations
+          when: on_fail
+          command: |
+            cd backend
+            npm run premigrations:revert
+            npm run migrations:revert
+      
   revert-migrations:
     description: Revert the last migration if not successfully run in the current workflow.
     #parameters:
@@ -459,6 +478,14 @@ jobs:
       #       source ~/.bash_profile
       #       ansible --version
 
+  
+  ###################################################
+  # RUN MIGRATIONS                                  #                                                 
+  #                                                 #
+  #   This will setup our database migrations using #
+  #   Postgres                                      #
+  #                                                 #
+  ###################################################
   run-migrations:
     docker:
       # Docker image here that supports NodeJS
@@ -575,7 +602,14 @@ jobs:
       - create-to-destroy
 
       - revert-migrations
-   
+
+  ###################################################
+  # DEPLOY FRONTEND                                 #                                                 
+  #                                                 #
+  #   This will setup our frontend architecture and #
+  #   deploy it to an s3 bucket                     #
+  #                                                 #
+  ################################################### 
   deploy-frontend:
     docker:
       - image: cimg/base:2022.08
@@ -645,6 +679,103 @@ jobs:
 
       - revert-migrations
 
+  ###################################################
+  # DEPLOY BACKEND                                  #                                                 
+  #                                                 #
+  #   This will setup our backend architecture and  #
+  #   deploy it to an ec2 instance                  #
+  #                                                 #
+  ################################################### 
+  deploy-backend:
+    docker:
+      - image: cimg/base:2022.08
+    steps:
+      - checkout
+
+      # Restore from cache
+      - restore_cache:
+          keys: [frontend-build]
+
+      - attach_workspace:
+          at: ./.circleci/ansible/
+      
+      # Add ssh keys with fingerprint
+      - add_ssh_keys:
+          fingerprints: ["86:64:b3:f1:e6:89:fc:e0:81:36:ea:45:15:f8:8c:a3"]
+           
+      - run: 
+          name: Install Ansible
+          command: |
+            sudo apt-get update &&
+            sudo apt install -y ansible
+            which ansible
+            ansible --version
+
+      - run:
+          name: Display Ansible etc/ansible contents
+          command: |
+            ls -al /etc/ansible
+
+      - run: 
+          name: Host Key Checking
+          command: |
+            ansible --version
+            python3 --version
+            echo "[defaults]" > ~/.ansible.cfg
+            echo "host_key_checking = False" >> ~/.ansible.cfg
+            echo "record_host_keys=False" >> ~/.ansible.cfg
+            
+      # - run:
+      #     name: Deploy backend
+      #     command: |
+      #       ls -la
+      #       cd backend
+      #       npm run build
+      #       cd ..
+      #       # Zip the directory
+      #       #tar -C backend -czvf artifact.tar.gz .
+      #       tar -zcvf artifact.tar.gz backend
+      #       mv artifact.tar.gz .circleci/ansible/roles/deploy/tasks
+      #       cd .circleci/ansible
+      #       echo "Contents  of the inventory.txt file is -------"
+      #       cat inventory.txt
+      #       ansible-playbook -i inventory.txt deploy-backend.yml
+      
+      - run:
+          name: Baking at this point...
+          command: |
+            ls -la
+            cd backend
+            npm run build
+            
+      - run:
+          name: Zip Backend Directory for Export
+          command: |
+            ls
+            tar -zcvf artifact.tar.gz backend
+
+      - run:
+          name: Export to for ansible operations
+          command: |
+            mv artifact.tar.gz .circleci/ansible/roles/deploy/tasks
+            
+      - run:
+          name: List Hosts
+          command: |
+            cd .circleci/ansible/
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+
+      - run:
+          name: Run Playbook to Deploy Backend
+          command: |
+            ansible-playbook -i inventory.txt deploy-backend.yml
+        
+      #Uncompress
+      #tar -xzvf artifact.tar.gz      
+      # Here's where you will add some code to rollback on failure  
+      - create-to-revert-migrations
+
   destroy-aws-infrastructure:
     docker:
       # Docker image here that supports AWS CLI
@@ -680,36 +811,38 @@ jobs:
 workflows:
   default:
     jobs:
-      # - setup-cloudfront
+      - setup-cloudfront
 
-      # - setup-s3-bucket:
-      #     requires: [setup-cloudfront]
-      # - build-frontend:
-      #     context: slack-env
-      # - build-backend:
-      #     context: slack-env
-      # - test-frontend:
-      #     requires: [build-frontend]
-      # - test-backend:
-      #     requires: [build-backend]
-      # - scan-backend:
-      #     requires: [build-backend]
-      # - scan-frontend:
-      #     requires: [build-frontend]
-      # - deploy-infrastructure:
-      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-      #     #filters:
-      #       #branches:
-      #         #only: [test-feature-branch]
-      # - configure-infrastructure:
-      #     requires: [deploy-infrastructure]
-      # - run-migrations:
-      #     requires: [configure-infrastructure]
-      # - deploy-frontend:
-      #     requires: [run-migrations, setup-s3-bucket]
-      
-      - destroy-aws-infrastructure
+      - setup-s3-bucket:
+          requires: [setup-cloudfront]
+      - build-frontend:
+          context: slack-env
+      - build-backend:
+          context: slack-env
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]
+      - scan-backend:
+          requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          #filters:
+            #branches:
+              #only: [test-feature-branch]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations, setup-s3-bucket]
+      - deploy-backend:
+          requires: [run-migrations]
 
-      - destroy-migrations
+      # - destroy-aws-infrastructure
+
+      # - destroy-migrations
       
       

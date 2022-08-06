@@ -1,0 +1,63 @@
+---
+- name: "Update apt packages."
+  become: true
+  apt:
+    update_cache: yes
+
+- name: "Upgrade packages"
+  become: true
+  apt:
+    upgrade: yes
+
+
+- name: Remove dependencies that are no longer required
+  become: true
+  apt:
+    autoremove: yes
+
+- name: "Install dependencies."
+  become: true
+  apt:
+    name: ["nodejs", "npm"]
+    state: latest
+    update_cache: yes
+
+- name: "Install pm2"
+  become: true
+  npm:
+    name: pm2
+    global: yes
+    production: yes
+    state: present
+
+
+############## START FROM HERE ################
+# - name: Create directory
+#   shell: |
+#     mkdir web
+
+- name: Copy index.js to web directory
+  template:
+    src: "files/artifact.tar.gz"
+    dest: "/home/ubuntu/artifact.tar.gz"
+
+- name: Uncompress and rename directory
+  shell: |
+
+    echo "<-------- Uncompressing -------->"
+    tar -xzvf artifact.tar.gz
+    echo "SUCCESS"
+    ls -la
+    echo "<-------- Renaming from backend to web -------->"
+    mv backend web
+    echo "SUCCESS"
+    ls
+    echo "<-------- View Content in web directory -------->"
+    ls -la web
+
+- name: Start server @ port 3030
+  shell: |
+    cd web
+    pm2 stop default
+    pm2 start npm -- start
+    #pm2 start /home/ubuntu/web/index.js -f
