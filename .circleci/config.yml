@@ -590,6 +590,7 @@ jobs:
       - run:
           name: Revert Migrations
           command: |
+            cd backend
             npm run migriations:revert
       
   deploy-frontend:
