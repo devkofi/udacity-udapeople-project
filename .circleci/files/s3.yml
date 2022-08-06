@@ -1,0 +1,33 @@
+Description: CloudFormation template for s3 bucket
+
+Parameters:
+  BucketID:
+    Description: Unique identifier.
+    Type: String
+
+Resources:
+  S3Bucket:
+    Description: Bucket for udapeople Udacity project
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      BucketName: udapeople-kk1j287dhjp437knk
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+
+Outputs:
+  BucketID:
+    Description: s3 Bucket for hosting content
+    Value: !Sub ${BucketID}
+    Export:
+      Name: BucketID
+
+  S3Bucket:
+    Description: Bucket Created using this template.
+    Value: !Ref S3Bucket
+    Export:
+      Name: S3Bucket

@@ -16,8 +16,12 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
+            aws cloudformation delete-stack --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+            
+            
 
   create-to-destroy:
     description: Installs aws to destroy-environment on fail
@@ -36,6 +40,8 @@ commands:
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
+            aws cloudformation delete-stack --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
 
@@ -115,9 +121,33 @@ jobs:
             cd .circleci/files
             aws cloudformation deploy \
               --template-file cloudfront.yml \
-              --stack-name InitialStack\
+              --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}\
               --parameter-overrides WorkflowID=udapeople-kk1j287dhjp437knk
 
+  ###################################################
+  # SETUP S3 BUCKET FOR HOSTING                     #                                                 
+  #                                                 #
+  #   This will help us set a storage service that  #
+  #   that will help us host the content of our     #
+  #   application                                   #
+  ###################################################
+  setup-s3-bucket:
+    docker:
+      # Docker image here that supports AWS CLI
+      - image: amazon/aws-cli
+    steps:
+      # Checkout code from git
+      - checkout
+
+      - run:
+          name: Setup S3 Bucket For Hosting
+          command: |
+            cd .circleci/files
+            aws cloudformation deploy \
+              --template-file s3.yml \
+              --stack-name "udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides BucketID="udapeople-kk1j287dhjp437knk-${CIRCLE_WORKFLOW_ID:0:7}"  \
+              --tags project=udapeople
 
   ###################################################
   # BUILD FRONT END WITH NOTIFICATIONS              #                                                 
@@ -563,6 +593,8 @@ workflows:
   default:
     jobs:
       - setup-cloudfront
+      - setup-s3-bucket:
+          requires: [setup-cloudfront]
       - build-frontend:
           context: slack-env
       - build-backend:
