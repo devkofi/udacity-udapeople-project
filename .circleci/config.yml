@@ -673,7 +673,7 @@ jobs:
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             #aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-            aws s3 cp dist s3://udapeople-kk1j287dhjp437knk
+            aws s3 cp dist s3://udapeople-kk1j287dhjp437knk --recursive
       # Here's where you will add some code to rollback on failure      
       - destroy-environment
 
@@ -724,7 +724,13 @@ jobs:
             echo "[defaults]" > ~/.ansible.cfg
             echo "host_key_checking = False" >> ~/.ansible.cfg
             echo "record_host_keys=False" >> ~/.ansible.cfg
-            
+
+      - run: 
+          name: Install NodeJs and NPM
+          command: |
+            sudo apt install -y nodejs npm
+            node --version
+            npm --version      
       # - run:
       #     name: Deploy backend
       #     command: |
@@ -774,6 +780,8 @@ jobs:
       #Uncompress
       #tar -xzvf artifact.tar.gz      
       # Here's where you will add some code to rollback on failure  
+      - create-to-destroy
+
       - create-to-revert-migrations
 
   destroy-aws-infrastructure:
