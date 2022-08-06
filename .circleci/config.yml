@@ -620,7 +620,9 @@ jobs:
       - run: 
           name: Install Ansible
           command: |
+            ls -al
             python3 -m pip install --user ansible
+            export PATH=$PATH:/.local/bin
             ansible --version
       
       - run: 
