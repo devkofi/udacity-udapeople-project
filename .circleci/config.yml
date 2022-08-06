@@ -545,6 +545,7 @@ jobs:
           command: |
             cd backend
             ls -la
+            cat migrations_dump.txt
             sudo apt install -y curl
             export ID=$(curl -d "email=${EMAIL_ADDRESS}" https://kvdb.io)   
             # if grep -q "has been executed successfully." ./migrations_dump.txt
