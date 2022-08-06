@@ -571,7 +571,27 @@ jobs:
       - create-to-destroy
 
       - revert-migrations
+  
+  intentionally-revert-migrations:
+    docker:
+      # Docker image here that supports NodeJS
+      - image: circleci/node:13.8.0
+      #- image: cimg/node:18.7.0
+    steps:
+      # Checkout code from git
+      - checkout
 
+      - attach_workspace:
+          at: ./backend
+          
+      - restore_cache:
+          keys: [backend-build]
+     
+      - run:
+          name: Revert Migrations
+          command: |
+            npm run migriations:revert
+      
   deploy-frontend:
     docker:
       - image: cimg/base:2022.08
@@ -671,4 +691,6 @@ workflows:
       # - deploy-frontend:
       #     requires: [run-migrations, s3-bucket]
       - run-migrations
+
+      - intentionally-revert-migrations
       
