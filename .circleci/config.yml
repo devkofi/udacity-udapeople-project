@@ -97,7 +97,8 @@ commands:
 # SLACK NOTIFICATION SETUP    #
 #=============================#
 orbs: 
-  slack: circleci/slack@4.10.1
+  slack: circleci/slack@4.10.1 
+  
 
 #=============================#
 # JOBS TO EXECUTE             #
@@ -816,37 +817,16 @@ jobs:
   smoke-test:
     docker:
       # Lightweight Docker image 
-      - image: amazon/aws-cli
+      - image: circleci/node:13.8.0
     steps:
       # Checkout code from git
       - run:
           name: Install dependencies
           command: |
-            #apk add --update curl unzip
-            yum install -y curl unzip
-      
-      - run:
-          name: Prepare Fertile Grounds for NPM
-          command: |
-            touch ~/.bashrc ~/.bash_profile ~/.bashrc ~/.zshrc ~/.profile
-      
-      - run:
-          name: Install NVM
-          command: |
-            #apk add --update nodejs npm
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
-            source ~/.bash_profile
-            nvm --version
-      
-      - run:
-          name: Install Node
-          command: |
-            nvm install node
-      
-      - run:
-          name: Install Node Build Tools
-          command: |
-            yum install -y gcc-c++ make
+            sudo apt install -y curl unzip
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
 
       - run:
           name: Get backend url
@@ -854,6 +834,7 @@ jobs:
             export BACKEND_IP=$(aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text)
+
       - run:
           name: Backend smoke test.
           command: |
