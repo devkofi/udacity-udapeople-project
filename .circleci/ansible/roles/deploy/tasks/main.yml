@@ -10,7 +10,7 @@
     upgrade: yes
 
 
-- name: Remove dependencies that are no longer required
+- name: "Remove dependencies that are no longer required"
   become: true
   apt:
     autoremove: yes
@@ -30,20 +30,15 @@
     production: yes
     state: present
 
-
-############## START FROM HERE ################
-# - name: Create directory
-#   shell: |
-#     mkdir web
-
-- name: Copy index.js to web directory
+- name: "Copy artifact to web directory"
   template:
     src: "files/artifact.tar.gz"
     dest: "/home/ubuntu/artifact.tar.gz"
 
-- name: Uncompress and rename directory
+- name: "Uncompress and rename directory"
+  become: true
   shell: |
-
+    cd $HOME
     echo "<-------- Uncompressing -------->"
     tar -xzvf artifact.tar.gz
     echo "SUCCESS"
@@ -55,7 +50,8 @@
     echo "<-------- View Content in web directory -------->"
     ls -la web
 
-- name: Start server @ port 3030
+- name: "Start server @ port 3030"
+  become: true
   shell: |
     cd web
     npm install
