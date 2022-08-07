@@ -764,6 +764,8 @@ jobs:
           name: Export to for ansible operations
           command: |
             mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
+            echo "<---------- Checking to see file exists ------------>"
+            ls -al .circleci/ansible/roles/deploy/files/
             
       - run:
           name: List Hosts
