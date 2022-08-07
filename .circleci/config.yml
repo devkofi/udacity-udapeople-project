@@ -138,8 +138,10 @@ jobs:
             aws cloudformation deploy \
               --template-file s3.yml \
               --stack-name "udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides BucketID="udapeople-kk1j287dhjp437knk-${CIRCLE_WORKFLOW_ID:0:7}"  \
+              --parameter-overrides BucketID="udapeople-kk1j287dhjp437knk"  \
               --tags project=udapeople
+          #--stack-name "udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}" \
+              
 
   ###################################################
   # BUILD FRONT END WITH NOTIFICATIONS              #                                                 
@@ -673,8 +675,9 @@ jobs:
             cd frontend
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            #aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
             aws s3 cp dist s3://udapeople-kk1j287dhjp437knk --recursive
+      
+      #aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       # Here's where you will add some code to rollback on failure      
       - destroy-environment
 
