@@ -675,9 +675,8 @@ jobs:
             cd frontend
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            aws s3 cp dist s3://udapeople-kk1j287dhjp437knk --recursive
-      
-      #aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      #aws s3 cp dist s3://udapeople-kk1j287dhjp437knk --recursive
       # Here's where you will add some code to rollback on failure      
       - destroy-environment
 
@@ -806,6 +805,7 @@ jobs:
           name: Install Node and NPM
           command: |
             apk add --update nodejs npm
+      
       - run:
           name: Install aws hard way
           command: |
@@ -925,9 +925,9 @@ jobs:
 workflows:
   default:
     jobs:
-      - setup-cloudfront
-      - setup-s3-bucket:
-          requires: [setup-cloudfront]
+      # - setup-cloudfront
+      # - setup-s3-bucket:
+      #     requires: [setup-cloudfront]
       - build-frontend:
           context: slack-env
       - build-backend:
@@ -950,7 +950,9 @@ workflows:
       - run-migrations:
           requires: [configure-infrastructure]
       - deploy-frontend:
-          requires: [run-migrations, setup-s3-bucket]
+            requires: [run-migrations]
+      # - deploy-frontend:
+      #     requires: [run-migrations, setup-s3-bucket]
       - deploy-backend:
           requires: [deploy-infrastructure, run-migrations, deploy-frontend]
 
