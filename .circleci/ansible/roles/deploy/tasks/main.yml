@@ -30,10 +30,22 @@
     production: yes
     state: present
 
+- name: "List Content"
+  become: true
+  shell: |
+    ls -la
+    tar --version
+
 - name: "Copy artifact to home directory"
   template:
     src: "files/artifact.tar.gz"
-    dest: "/home/ubuntu/artifact.tar.gz"
+    dest: "~/artifact.tar.gz"
+
+- name: "List Content"
+  become: true
+  shell: |
+    ls -la
+    tar --version
 
 - name: "Uncompress and rename directory"
   become: true
