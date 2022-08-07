@@ -822,12 +822,14 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update curl unzip
+            #apk add --update curl unzip
+            yum install -y curl unzip
       
       - run:
           name: Install Node and NPM
           command: |
-            apk add --update nodejs npm
+            #apk add --update nodejs npm
+            yum install -y nodejs npm
       
 
       - run:
