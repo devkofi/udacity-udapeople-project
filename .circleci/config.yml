@@ -853,6 +853,8 @@ workflows:
 
       # # - destroy-migrations
 
-      - deploy-backend
+      - deploy-infrastructure
+      - deploy-backend:
+          requires: [deploy-infrastructure]
       
       
