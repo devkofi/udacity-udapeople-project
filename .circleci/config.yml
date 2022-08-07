@@ -13,13 +13,14 @@ commands:
         default: "${CIRCLE_WORKFLOW_ID:0:7}"
     steps:
       - run:
-          name: Destroy environments
+          name: Destroy environment << parameters.workflow_id >>
           when: on_fail
           command: |
-            aws cloudformation delete-stack --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}
-            aws cloudformation delete-stack --stack-name udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}
-            aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
-            aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+            echo "Destroying environment: << parameters.workflow_id >>"
+            aws cloudformation delete-stack --stack-name udapeople-cloudfront-<< parameters.workflow_id >>
+            aws cloudformation delete-stack --stack-name udapeople-s3-<< parameters.workflow_id >>
+            aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.workflow_id >>
+            aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.workflow_id >>
   
   create-to-destroy:
     description: Installs aws to destroy-environment on fail
@@ -30,7 +31,7 @@ commands:
         default: "${CIRCLE_WORKFLOW_ID:0:7}"
     steps:
       - run:
-          name: Destroy aws infrastructure
+          name: Destroy backend and frontend cloudformation stacks given a workflow ID.
           when: on_fail
           command: |
             cd $HOME
@@ -38,10 +39,10 @@ commands:
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
-            aws cloudformation delete-stack --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}
-            aws cloudformation delete-stack --stack-name udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}
-            aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
-            aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-cloudfront-<< parameters.workflow_id >>
+            aws cloudformation delete-stack --stack-name udapeople-s3-<< parameters.workflow_id >>
+            aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.workflow_id >>
+            aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.workflow_id >>
   
   create-to-revert-migrations:
     description: Revert all database migrations
@@ -65,20 +66,28 @@ commands:
       
   revert-migrations:
     description: Revert the last migration if not successfully run in the current workflow.
-    #parameters:
-      # Add parameter here     
+    workflow_id:
+        type: string       
     steps:
       - run:
           name: Revert migrations
           when: on_fail
           command: |
             
-            if($SUCCESS!=0); 
+            # if($SUCCESS!=0); 
+            # then
+            #   cd backend
+            #   npm run premigrations:revert
+            #   npm run migrations:revert
+            # fi
+
+            SUCCESS=$(curl --insecure  https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_<< parameters.workflow_id >>)
+            
+            if (( $SUCCESS == 1 ));
             then
-              cd backend
-              npm run premigrations:revert
-              npm run migrations:revert
-            fi
+                cd backend
+                npm run migration:revert
+            fi 
 
 
 #=============================#
@@ -576,13 +585,6 @@ jobs:
             ls -la
             cat migrations_dump.txt
             sudo apt install -y curl
-            export ID=$(curl -d "email=${EMAIL_ADDRESS}" https://kvdb.io)   
-            # if grep -q "has been executed successfully." ./migrations_dump.txt
-            # then
-            #     curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
-            # else
-            #     curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
-            # fi
             if grep -q "has been executed successfully." ./migrations_dump.txt
             then
                 curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
@@ -590,12 +592,21 @@ jobs:
                 curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
             export SUCCESS=$(curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7})
-            echo SUCCESS=$SUCCESS      
+            echo SUCCESS=$SUCCESS
+                  
       
-      # - run:
-      #     name: Intentionally fail
-      #     command: |
-      #       exit 1
+        #export ID=$(curl -d "email=${EMAIL_ADDRESS}" https://kvdb.io)   
+        # if grep -q "has been executed successfully." ./migrations_dump.txt
+        # then
+        #     curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+        # else
+        #     curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
+        # fi
+            
+        # - run:
+        #     name: Intentionally fail
+        #     command: |
+        #       exit 1
 
       - persist_to_workspace:
             root: ./backend
@@ -791,6 +802,14 @@ jobs:
 
       - revert-migrations
 
+
+  ###################################################
+  # SMOKE TEST                                      #                                                 
+  #                                                 #
+  #   This will setup our backend architecture and  #
+  #   deploy it to an ec2 instance                  #
+  #                                                 #
+  ################################################### 
   smoke-test:
     docker:
       # Lightweight Docker image 
@@ -801,6 +820,7 @@ jobs:
           name: Install dependencies
           command: |
             apk add --update unzip
+      
       - run:
           name: Install Node and NPM
           command: |
@@ -925,36 +945,49 @@ jobs:
 workflows:
   default:
     jobs:
+      
+      # - build-frontend:
+      #     context: slack-env
+      # - build-backend:
+      #     context: slack-env
+      # - test-frontend:
+      #     requires: [build-frontend]
+      # - test-backend:
+      #     requires: [build-backend]
+      # - scan-backend:
+      #     requires: [build-backend]
+      # - scan-frontend:
+      #     requires: [build-frontend]
+      # - deploy-infrastructure:
+      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      #     #filters:
+      #       #branches:
+      #         #only: [test-feature-branch]
+      # - configure-infrastructure:
+      #     requires: [deploy-infrastructure]
+      # - run-migrations:
+      #     requires: [configure-infrastructure]
+      # - deploy-frontend:
+      #       requires: [run-migrations]
+      # # - deploy-frontend:
+      # #     requires: [run-migrations, setup-s3-bucket]
+      # - deploy-backend:
+      #     requires: [deploy-infrastructure, run-migrations, deploy-frontend]
+      # - smoke-test:
+      #     requires: [deploy-backend, deploy-frontend]
+
+      - smoke-test
       # - setup-cloudfront
       # - setup-s3-bucket:
       #     requires: [setup-cloudfront]
-      - build-frontend:
-          context: slack-env
-      - build-backend:
-          context: slack-env
-      - test-frontend:
-          requires: [build-frontend]
-      - test-backend:
-          requires: [build-backend]
-      - scan-backend:
-          requires: [build-backend]
-      - scan-frontend:
-          requires: [build-frontend]
-      - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-          #filters:
-            #branches:
-              #only: [test-feature-branch]
-      - configure-infrastructure:
-          requires: [deploy-infrastructure]
-      - run-migrations:
-          requires: [configure-infrastructure]
-      - deploy-frontend:
-            requires: [run-migrations]
-      # - deploy-frontend:
-      #     requires: [run-migrations, setup-s3-bucket]
-      - deploy-backend:
-          requires: [deploy-infrastructure, run-migrations, deploy-frontend]
+
+
+
+
+
+
+
+
 
 
       # # - destroy-aws-infrastructure
