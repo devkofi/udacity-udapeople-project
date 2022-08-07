@@ -787,11 +787,109 @@ jobs:
 
       - create-to-revert-migrations
 
+  smoke-test:
+    docker:
+      # Lightweight Docker image 
+      - image: alpine:latest
+    steps:
+      # Checkout code from git
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update unzip
+      - run:
+          name: Install Node and NPM
+          command: |
+            apk add --update nodejs npm
+      - run:
+          name: Install aws hard way
+          command: |
+            apk --no-cache add \
+            binutils \
+            curl \
+            && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub \
+            && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk \
+            && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-bin-${GLIBC_VERSION}.apk \
+            && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-i18n-${GLIBC_VERSION}.apk \
+            && apk add --no-cache \
+                glibc-${GLIBC_VERSION}.apk \
+                glibc-bin-${GLIBC_VERSION}.apk \
+                glibc-i18n-${GLIBC_VERSION}.apk \
+            && /usr/glibc-compat/bin/localedef -i en_US -f UTF-8 en_US.UTF-8 \
+            && ln -sf /usr/glibc-compat/lib/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2 \
+            && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip -o awscliv2.zip \
+            && unzip awscliv2.zip \
+            && aws/install \
+            && rm -rf \
+                awscliv2.zip \
+                aws \
+                /usr/local/aws-cli/v2/current/dist/aws_completer \
+                /usr/local/aws-cli/v2/current/dist/awscli/data/ac.index \
+                /usr/local/aws-cli/v2/current/dist/awscli/examples \
+                glibc-*.apk \
+            && find /usr/local/aws-cli/v2/current/dist/awscli/botocore/data -name examples-1.json -delete \
+            && apk --no-cache del \
+                binutils \
+                curl \
+            && rm -rf /var/cache/apk/*
+
+      - run:
+          name: Check aws version
+          command: |
+            aws --version
+
+      # - run:
+      #     name: Install aws
+      #     command: |
+      #       curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+      #       unzip awscliv2.zip 
+      #       cd aws
+      #       bash ./install.sh
+
+      - run:
+          name: Get backend url
+          command: |
+            export BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --output text)
+      - run:
+          name: Backend smoke test.
+          command: |
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            if curl "${API_URL}/api/status" | grep "ok"
+            then
+                return 0
+            else
+                return 1
+            fi
+      - run:
+          name: Frontend smoke test.
+          command: |
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"            
+            echo ${URL} 
+            if curl -s ${URL} | grep "Welcome"
+            then
+                # Change this to 0 after the job fails
+              return 1
+            else
+              return 1
+            fi
+      # Here's where you will add some code to rollback on failure  
+      - run:
+          name: Destroy environment ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
+          command: |
+            aws cloudformation delete-stack --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
+            aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+  
   destroy-aws-infrastructure:
     docker:
       # Docker image here that supports AWS CLI
       - image: amazon/aws-cli
-    
+
     steps:
       
       - run:
