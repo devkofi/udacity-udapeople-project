@@ -48,6 +48,7 @@ commands:
     steps:
       - run: 
           name: Install NodeJs and NPM
+          when: on_fail
           command: |
             cd $HOME
             sudo apt install -y nodejs npm
@@ -72,7 +73,7 @@ commands:
           when: on_fail
           command: |
             
-            if($SUCCESS==0); 
+            if($SUCCESS!=0); 
             then
               cd backend
               npm run premigrations:revert
@@ -582,9 +583,9 @@ jobs:
             # fi
             if grep -q "has been executed successfully." ./migrations_dump.txt
             then
-                curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
-            else
                 curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
+            else
+                curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
             export SUCCESS=$(curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7})
             echo SUCCESS=$SUCCESS      
@@ -786,7 +787,7 @@ jobs:
       # Here's where you will add some code to rollback on failure  
       - create-to-destroy
 
-      - create-to-revert-migrations
+      - revert-migrations
 
   destroy-aws-infrastructure:
     docker:
@@ -823,41 +824,41 @@ jobs:
 workflows:
   default:
     jobs:
-      # - setup-cloudfront
-      # - setup-s3-bucket:
-      #     requires: [setup-cloudfront]
-      # - build-frontend:
-      #     context: slack-env
-      # - build-backend:
-      #     context: slack-env
-      # - test-frontend:
-      #     requires: [build-frontend]
-      # - test-backend:
-      #     requires: [build-backend]
-      # - scan-backend:
-      #     requires: [build-backend]
-      # - scan-frontend:
-      #     requires: [build-frontend]
-      # - deploy-infrastructure:
-      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-      #     #filters:
-      #       #branches:
-      #         #only: [test-feature-branch]
-      # - configure-infrastructure:
-      #     requires: [deploy-infrastructure]
-      # - run-migrations:
-      #     requires: [configure-infrastructure]
-      # - deploy-frontend:
-      #     requires: [run-migrations, setup-s3-bucket]
-      # - deploy-backend:
-      #     requires: [run-migrations, deploy-frontend]
+      - setup-cloudfront
+      - setup-s3-bucket:
+          requires: [setup-cloudfront]
+      - build-frontend:
+          context: slack-env
+      - build-backend:
+          context: slack-env
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]
+      - scan-backend:
+          requires: [build-backend]
+      - scan-frontend:
+          requires: [build-frontend]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          #filters:
+            #branches:
+              #only: [test-feature-branch]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations, setup-s3-bucket]
+      - deploy-backend:
+          requires: [deploy-infrastructure, run-migrations, deploy-frontend]
+
 
       # # - destroy-aws-infrastructure
-
       # # - destroy-migrations
 
-      - deploy-infrastructure
-      - deploy-backend:
-          requires: [deploy-infrastructure]
+      # - deploy-infrastructure
+      # - deploy-backend:
+      #     requires: [deploy-infrastructure]
       
       
