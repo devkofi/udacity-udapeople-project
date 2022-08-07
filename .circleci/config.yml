@@ -816,7 +816,7 @@ jobs:
   smoke-test:
     docker:
       # Lightweight Docker image 
-      - image: alpine:latest
+      - image: amazon/aws-cli
     steps:
       # Checkout code from git
       - run:
@@ -829,60 +829,6 @@ jobs:
           command: |
             apk add --update nodejs npm
       
-      - run:
-          name: Install aws
-          command: |
-            apk add --no-cache \
-            python3 \
-            py3-pip \
-            && pip3 install --upgrade pip \
-            && pip3 install \
-                awscli \
-            && rm -rf /var/cache/apk/*
-      # - run:
-      #     name: Install aws hard way
-      #     command: |
-      #       apk --no-cache add \
-      #       binutils \
-      #       curl \
-      #       && curl -sL https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub -o /etc/apk/keys/sgerrand.rsa.pub \
-      #       && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk \
-      #       && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-bin-${GLIBC_VERSION}.apk \
-      #       && curl -sLO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-i18n-${GLIBC_VERSION}.apk \
-      #       && apk add --no-cache \
-      #           glibc-${GLIBC_VERSION}.apk \
-      #           glibc-bin-${GLIBC_VERSION}.apk \
-      #           glibc-i18n-${GLIBC_VERSION}.apk \
-      #       && /usr/glibc-compat/bin/localedef -i en_US -f UTF-8 en_US.UTF-8 \
-      #       && ln -sf /usr/glibc-compat/lib/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2 \
-      #       && curl -sL https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip -o awscliv2.zip \
-      #       && unzip awscliv2.zip \
-      #       && aws/install \
-      #       && rm -rf \
-      #           awscliv2.zip \
-      #           aws \
-      #           /usr/local/aws-cli/v2/current/dist/aws_completer \
-      #           /usr/local/aws-cli/v2/current/dist/awscli/data/ac.index \
-      #           /usr/local/aws-cli/v2/current/dist/awscli/examples \
-      #           glibc-*.apk \
-      #       && find /usr/local/aws-cli/v2/current/dist/awscli/botocore/data -name examples-1.json -delete \
-      #       && apk --no-cache del \
-      #           binutils \
-      #           curl \
-      #       && rm -rf /var/cache/apk/*
-
-      - run:
-          name: Check aws version
-          command: |
-            aws --version
-
-      # - run:
-      #     name: Install aws
-      #     command: |
-      #       curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      #       unzip awscliv2.zip 
-      #       cd aws
-      #       bash ./install.sh
 
       - run:
           name: Get backend url
@@ -956,37 +902,37 @@ workflows:
   default:
     jobs:
       
-      - build-frontend:
-          context: slack-env
-      - build-backend:
-          context: slack-env
-      - test-frontend:
-          requires: [build-frontend]
-      - test-backend:
-          requires: [build-backend]
-      - scan-backend:
-          requires: [build-backend]
-      - scan-frontend:
-          requires: [build-frontend]
-      - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-          #filters:
-            #branches:
-              #only: [test-feature-branch]
-      - configure-infrastructure:
-          requires: [deploy-infrastructure]
-      - run-migrations:
-          requires: [configure-infrastructure]
-      - deploy-frontend:
-            requires: [run-migrations]
+      # - build-frontend:
+      #     context: slack-env
+      # - build-backend:
+      #     context: slack-env
+      # - test-frontend:
+      #     requires: [build-frontend]
+      # - test-backend:
+      #     requires: [build-backend]
+      # - scan-backend:
+      #     requires: [build-backend]
+      # - scan-frontend:
+      #     requires: [build-frontend]
+      # - deploy-infrastructure:
+      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      #     #filters:
+      #       #branches:
+      #         #only: [test-feature-branch]
+      # - configure-infrastructure:
+      #     requires: [deploy-infrastructure]
+      # - run-migrations:
+      #     requires: [configure-infrastructure]
       # - deploy-frontend:
-      #     requires: [run-migrations, setup-s3-bucket]
-      - deploy-backend:
-          requires: [deploy-infrastructure, run-migrations, deploy-frontend]
-      - smoke-test:
-          requires: [deploy-backend, deploy-frontend]
+      #       requires: [run-migrations]
+      # # - deploy-frontend:
+      # #     requires: [run-migrations, setup-s3-bucket]
+      # - deploy-backend:
+      #     requires: [deploy-infrastructure, run-migrations, deploy-frontend]
+      # - smoke-test:
+      #     requires: [deploy-backend, deploy-frontend]
 
-      #- smoke-test
+      - smoke-test
       # - setup-cloudfront
       # - setup-s3-bucket:
       #     requires: [setup-cloudfront]
