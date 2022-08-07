@@ -84,7 +84,7 @@ commands:
             #   npm run migrations:revert
             # fi
 
-            SUCCESS=$(curl --insecure  https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_<< parameters.workflow-id >>)
+            SUCCESS=$(curl --insecure  https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_<< parameters.workflow_id >>)
             
             if (( $SUCCESS == 1 ));
             then
