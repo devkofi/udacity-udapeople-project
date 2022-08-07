@@ -38,15 +38,15 @@
 - name: "Uncompress and rename directory"
   become: true
   shell: |
-    echo "<-------- Uncompressing -------->"
+    echo "Uncompressing..."
     tar -xzvf artifact.tar.gz
     echo "SUCCESS"
     ls -la
-    echo "<-------- Renaming from backend to web -------->"
+    echo "Renaming from backend to web..."
     mv backend web
     echo "SUCCESS"
     ls
-    echo "<-------- View Content in web directory -------->"
+    echo "View Content in web directory..."
     ls -la web
 
 - name: "Start server"
