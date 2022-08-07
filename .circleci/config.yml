@@ -826,10 +826,16 @@ jobs:
             yum install -y curl unzip
       
       - run:
+          name: Prepare Fertile Grounds for NPM
+          command: |
+            touch ~/.bashrc ~/.bash_profile ~/.bashrc ~/.zshrc ~/.profile
+      
+      - run:
           name: Install NVM
           command: |
             #apk add --update nodejs npm
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+            source ~/.bash_profile
             nvm --version
       
       - run:
