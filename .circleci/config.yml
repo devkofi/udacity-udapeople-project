@@ -826,11 +826,21 @@ jobs:
             yum install -y curl unzip
       
       - run:
-          name: Install Node and NPM
+          name: Install NVM
           command: |
             #apk add --update nodejs npm
-            yum install -y nodejs npm
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+            nvm --version
       
+      - run:
+          name: Install Node
+          command: |
+            nvm install node
+      
+      - run:
+          name: Install Node Build Tools
+          command: |
+            yum install -y gcc-c++ make
 
       - run:
           name: Get backend url
