@@ -758,7 +758,8 @@ jobs:
           name: Zip Backend Directory without node_modules directory for Export
           command: |
             ls
-            tar -zcvf artifact.tar.gz --exclude="backend/node_modules" backend
+            #tar -zcvf artifact.tar.gz --exclude="backend/node_modules" backend
+            tar -zcvf artifact.tar.gz backend
 
       - run:
           name: Export to for ansible operations

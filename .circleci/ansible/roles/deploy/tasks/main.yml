@@ -30,34 +30,21 @@
     production: yes
     state: present
 
-- name: "List Content"
-  become: true
-  shell: |
-    ls -la
-    tar --version
-
-- name: "Copy artifact to home directory"
-  copy:
+- name: "Decompress local archive to remote server"
+  unarchive:
     src: "files/artifact.tar.gz"
-    dest: "~/artifact.tar.gz"
+    dest: "~/"
 
-- name: "List Content"
+- name: "Rename directory from backend to web"
   become: true
   shell: |
-    ls -la
-    tar --version
-
-- name: "Uncompress and rename directory"
-  become: true
-  shell: |
-    tar -xzvf artifact.tar.gz
     mv backend web
 
-- name: "Install backend dependencies"
-  become: true
-  shell: |
-    cd web
-    npm install
+# - name: "Install backend dependencies"
+#   become: true
+#   shell: |
+#     cd web
+#     npm install
 
 - name: "Start server"
   become: true
