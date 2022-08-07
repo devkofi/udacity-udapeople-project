@@ -30,7 +30,7 @@
     production: yes
     state: present
 
-- name: "Copy artifact to web directory"
+- name: "Copy artifact to home directory"
   template:
     src: "files/artifact.tar.gz"
     dest: "/home/ubuntu/artifact.tar.gz"
@@ -38,7 +38,6 @@
 - name: "Uncompress and rename directory"
   become: true
   shell: |
-    cd $HOME
     echo "<-------- Uncompressing -------->"
     tar -xzvf artifact.tar.gz
     echo "SUCCESS"
@@ -50,11 +49,10 @@
     echo "<-------- View Content in web directory -------->"
     ls -la web
 
-- name: "Start server @ port 3030"
+- name: "Start server"
   become: true
   shell: |
     cd web
     npm install
     pm2 stop default
     pm2 start npm -- start
-    #pm2 start /home/ubuntu/web/index.js -f
