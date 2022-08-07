@@ -8,7 +8,7 @@ commands:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
       # Add parameter here   
-      workflow-id:
+      workflow_id:
         type: string
         default: "${CIRCLE_WORKFLOW_ID:0:7}"
     steps:
@@ -66,7 +66,9 @@ commands:
       
   revert-migrations:
     description: Revert the last migration if not successfully run in the current workflow.
-    job_id:
+    parameters:
+      # Add parameter here   
+      workflow_id:
         type: string
         default: "${CIRCLE_WORKFLOW_ID:0:7}"       
     steps:
@@ -82,7 +84,7 @@ commands:
             #   npm run migrations:revert
             # fi
 
-            SUCCESS=$(curl --insecure  https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_<< parameters.job_id >>)
+            SUCCESS=$(curl --insecure  https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_<< parameters.workflow-id >>)
             
             if (( $SUCCESS == 1 ));
             then
