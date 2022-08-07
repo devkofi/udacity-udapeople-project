@@ -26,7 +26,7 @@ commands:
     description: Installs aws to destroy-environment on fail
     parameters:
       # Add parameter here   
-      workflow-id:
+      workflow_id:
         type: string
         default: "${CIRCLE_WORKFLOW_ID:0:7}"
     steps:
@@ -86,7 +86,7 @@ commands:
 
             SUCCESS=$(curl --insecure  https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_<< parameters.workflow_id >>)
             
-            if (( $SUCCESS == 1 ));
+            if ($SUCCESS == 1);
             then
                 cd backend
                 npm run migration:revert
