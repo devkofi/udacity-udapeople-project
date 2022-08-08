@@ -833,7 +833,7 @@ workflows:
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       - run-migrations:
-          requires: [setup-rds, configure-infrastructure]
+          requires: [setup-aws-rds, configure-infrastructure]
       - deploy-frontend:
             requires: [run-migrations]
       # - deploy-frontend:
