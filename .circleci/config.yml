@@ -107,6 +107,8 @@ jobs:
     docker:
       # Docker image here that supports AWS CLI
       - image: amazon/aws-cli
+        environment:
+          PAGER: cat
     steps:
       # Checkout code from git
       - checkout
@@ -123,6 +125,8 @@ jobs:
             --allocated-storage $TYPEORM_STORAGE
             --publicly-accessible
 
+      - destroy-environment
+
   ###################################################
   # SETUP CLOUDFRONT DISTRIBUTION                   #                                                 
   #                                                 #
@@ -134,10 +138,18 @@ jobs:
     docker:
       # Docker image here that supports AWS CLI
       - image: amazon/aws-cli
+        environment:
+          PAGER: cat
     steps:
       # Checkout code from git
       - checkout
 
+      - run:
+          name: Disable Output Buffering
+          command: |
+            export PYTHONUNBUFFERED=1
+            python -m unittest
+          
       - run:
           name: Setup Cloudfront for deployment
           command: |
@@ -146,6 +158,8 @@ jobs:
               --template-file cloudfront.yml \
               --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}\
               --parameter-overrides WorkflowID=udapeople-kk1j287dhjp437knk
+
+      - destroy-environment
 
   ###################################################
   # SETUP S3 BUCKET FOR HOSTING                     #                                                 
