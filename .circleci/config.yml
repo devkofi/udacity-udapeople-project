@@ -17,6 +17,7 @@ commands:
           when: on_fail
           command: |
             echo "Destroying environment: << parameters.workflow_id >>"
+            aws rds delete-db-instance --db-instance-identifier $TYPEORM_INSTANCE_ID --final-db-snapshot-identifier SkipFinalSnapShot
             aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
             aws cloudformation delete-stack --stack-name udapeople-cloudfront-<< parameters.workflow_id >>
             aws cloudformation delete-stack --stack-name udapeople-s3-<< parameters.workflow_id >>
@@ -40,6 +41,7 @@ commands:
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
+            aws rds delete-db-instance --db-instance-identifier $TYPEORM_INSTANCE_ID --final-db-snapshot-identifier SkipFinalSnapShot
             aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
             aws cloudformation delete-stack --stack-name udapeople-cloudfront-<< parameters.workflow_id >>
             aws cloudformation delete-stack --stack-name udapeople-s3-<< parameters.workflow_id >>
@@ -79,16 +81,9 @@ commands:
           when: on_fail
           command: |
             
-            # if($SUCCESS!=0); 
-            # then
-            #   cd backend
-            #   npm run premigrations:revert
-            #   npm run migrations:revert
-            # fi
-
-            SUCCESS=$(curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_<< parameters.workflow_id >>)
+            export SUCCESS=$(curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_<< parameters.workflow_id >>)
             
-            if ($SUCCESS == 1);
+            if ($SUCCESS != 1);
             then
                 cd backend
                 npm run premigrations:revert
@@ -108,6 +103,26 @@ orbs:
 #=============================#            
 jobs:
 
+  setup-aws-rds:
+    docker:
+      # Docker image here that supports AWS CLI
+      - image: amazon/aws-cli
+    steps:
+      # Checkout code from git
+      - checkout
+
+      - run:
+          name: Setup RDS for Database Migration
+          command: |
+            aws rds create-db-instance \
+            --db-instance-identifier $TYPEORM_INSTANCE_ID \
+            --db-instance-class $TYPEORM_INSTANCE_CLASS \
+            --engine $TYPEORM_CONNECTION \
+            --master-username $TYPEORM_USERNAME \
+            --master-user-password $TYPEORM_PASSWORD \
+            --allocated-storage $TYPEORM_STORAGE
+            --publicly-accessible
+
   ###################################################
   # SETUP CLOUDFRONT DISTRIBUTION                   #                                                 
   #                                                 #
@@ -115,7 +130,7 @@ jobs:
   #   will help us switch from the old infrastruc-  #
   #   ture to the new one                           #
   ###################################################
-  setup-cloudfront:
+  setup-aws-cloudfront:
     docker:
       # Docker image here that supports AWS CLI
       - image: amazon/aws-cli
@@ -156,9 +171,7 @@ jobs:
               --stack-name "udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides BucketID="udapeople-kk1j287dhjp437knk"  \
               --tags project=udapeople
-          #--stack-name "udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}" \
               
-
   ###################################################
   # BUILD FRONT END WITH NOTIFICATIONS              #                                                 
   #                                                 #
@@ -442,38 +455,6 @@ jobs:
             echo "[defaults]" > ~/.ansible.cfg
             echo "host_key_checking = False" >> ~/.ansible.cfg
             echo "record_host_keys=False" >> ~/.ansible.cfg
-            
-          # ls ~/ -la
-          # if /etc/ansible/ansible.cfg
-          # then
-          #   echo "[defaults]" >> /etc/ansible/ansible.cfg
-          #   echo "host_key_checking = False" >> /etc/ansible/ansible.cfg
-          #   echo "record_host_keys=False" >> /etc/ansible/ansible.cfg
-          #   echo "============== Viewing /etc/ansible/ansible.cfg ==============="
-          #   sudo cat /etc/ansible/ansible.cfg
-          #   echo "============== Viewing /etc/ansible/ansible.cfg ==============="
-          # else
-          #   echo "No File Exists"
-          #   cd /etc
-          #   mkdir ansible
-          #   cd ansible
-          #   echo "[defaults]" > /etc/ansible/ansible.cfg
-          #   echo "host_key_checking = False" >> ansible.cfg
-          #   echo "record_host_keys=False" >> ansible.cfg
-          # fi
-          # echo "[defaults]" > ~/.ansible.cfg
-          # echo "host_key_checking = False" >> ~/.ansible.cfg
-          # echo "record_host_keys=False" >> ~/.ansible.cfg
-          # if ~/.ansible.cfg
-          # then
-          #   echo "============== Viewing /etc/ansible/ansible.cfg ==============="
-          #   sudo cat ~/.ansible.cfg
-          #   echo "============== Viewing /etc/ansible/ansible.cfg ==============="
-          # else
-          #   echo ".ansible.cfg does not exist"
-          # fi
-
-            
 
       - run:
           name: List Hosts
@@ -490,14 +471,6 @@ jobs:
       
       - create-to-destroy
       
-      # - run: 
-      #     name: Install Ansible
-      #     command: |
-      #       python3 -m pip install --user ansible
-      #       export PATH=$PATH:/.local/bin
-      #       source ~/.bash_profile
-      #       ansible --version
-
   
   ###################################################
   # RUN MIGRATIONS                                  #                                                 
@@ -535,57 +508,14 @@ jobs:
             echo "TYPEORM_DATABASE=$TYPEORM_DATABASE" >> .env
             cat .env
 
-      # - run:
-      #     name: Update Package
-      #     command: |
-      #       node --version
-      #       cd backend
-      #       sudo npm install -g npm-check-updates &&
-      #       sudo ncu -u
-          # npm install && npm audit fix
-      
-      # - run:
-      #     name: Clean Node Cache
-      #     command: |
-      #       npm cache clean –force
-
-      # - run:
-      #     name: Install Dependencies
-      #     command: |
-      #       cd backend
-      #       ls
-      #       npm install
-          #npm install && npm audit fix --force
-
-      # - run:
-      #     name: Migrations Create
-      #     command: |
-      #       cd backend
-      #       npm run premigrations:create
-      #       npm run migrations:create
-      
-      # - run:
-      #     name: Migrations Generate
-      #     command: |
-      #       cd backend
-      #       npm run premigrations:generate
-      #       npm run migrations:generate
-
       - run:
           name: Run Migrations
           command: |
             cd backend
+            npm install
             npm run premigrations
             npm run migrations > migrations_dump.txt
-                
-      # - run:
-      #     name: Run migrations
-      #     command: |
-      #       ls
-      #       cd backend
-      #       npm install
-      #       npm run migrations > migrations_dump.txt
-          
+
       - run:
           name: Send migration results to kvdb.io
           command: |
@@ -595,27 +525,22 @@ jobs:
             sudo apt install -y curl
             if grep -q "has been executed successfully." ./migrations_dump.txt
             then
-                curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
+                curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_$\{CIRCLE_WORKFLOW_ID:0:7\}  -d '1'
             else
-                curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+                curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
             fi
-            export SUCCESS=$(curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7})
-            echo SUCCESS=$SUCCESS
-                  
-      
-        #export ID=$(curl -d "email=${EMAIL_ADDRESS}" https://kvdb.io)   
-        # if grep -q "has been executed successfully." ./migrations_dump.txt
-        # then
-        #     curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
-        # else
-        #     curl --insecure https://kvdb.io/${ID}/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
-        # fi
             
-        # - run:
-        #     name: Intentionally fail
-        #     command: |
-        #       exit 1
+            export SUCCESS=$(curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_$\{CIRCLE_WORKFLOW_ID:0:7\})
+            
+            echo SUCCESS=$SUCCESS
 
+            if $SUCCESS==1
+            then
+              echo ✅
+            else
+              echo ❌
+            fi
+                  
       - persist_to_workspace:
             root: ./backend
             paths:
@@ -700,7 +625,7 @@ jobs:
       # Here's where you will add some code to rollback on failure      
       - destroy-environment
 
-      - create-to-revert-migrations
+      - revert-migrations
 
   ###################################################
   # DEPLOY BACKEND                                  #                                                 
@@ -712,6 +637,7 @@ jobs:
   deploy-backend:
     docker:
       - image: cimg/base:2022.08
+    
     steps:
       - checkout
 
@@ -734,6 +660,15 @@ jobs:
             which ansible
             ansible --version
 
+      - run: 
+          name: Install AWS CLI
+          command: |
+            cd $HOME
+            sudo apt install -y curl unzip
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+
       - run:
           name: Display Ansible etc/ansible contents
           command: |
@@ -754,38 +689,28 @@ jobs:
             sudo apt install -y nodejs npm
             node --version
             npm --version      
-      # - run:
-      #     name: Deploy backend
-      #     command: |
-      #       ls -la
-      #       cd backend
-      #       npm run build
-      #       cd ..
-      #       # Zip the directory
-      #       #tar -C backend -czvf artifact.tar.gz .
-      #       tar -zcvf artifact.tar.gz backend
-      #       mv artifact.tar.gz .circleci/ansible/roles/deploy/tasks
-      #       cd .circleci/ansible
-      #       echo "Contents  of the inventory.txt file is -------"
-      #       cat inventory.txt
-      #       ansible-playbook -i inventory.txt deploy-backend.yml
       
       - run:
           name: Baking at this point...
           command: |
             ls -la
             cd backend
+            npm install
             npm run build
             
       - run:
-          name: Zip Backend Directory without node_modules directory for Export
+          name: Zip Backend Directory including node_modules directory for Export
           command: |
             ls
-            #tar -zcvf artifact.tar.gz --exclude="backend/node_modules" backend
+            echo "Improvise to include node_modules folder..."
+            echo "ec2 instance takes all day to install..."
+            echo "Compressing..."
             tar -zcvf artifact.tar.gz backend
-
+            echo "Compression complete ✅"
+            #tar -zcvf artifact.tar.gz --exclude="backend/node_modules" backend
+            
       - run:
-          name: Export to for ansible operations
+          name: Export to ansible for operations
           command: |
             mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
             echo "<---------- Checking to see file exists ------------>"
@@ -807,7 +732,7 @@ jobs:
       #Uncompress
       #tar -xzvf artifact.tar.gz      
       # Here's where you will add some code to rollback on failure  
-      - create-to-destroy
+      - destroy-environment
 
       - revert-migrations
 
@@ -882,43 +807,12 @@ jobs:
 
       - revert-migrations
 
-  destroy-aws-infrastructure:
-    docker:
-      # Docker image here that supports AWS CLI
-      - image: amazon/aws-cli
-
-    steps:
-      
-      - run:
-          name: Destroying Infrastructure
-          command: |
-            aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-            aws cloudformation delete-stack --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}
-            aws cloudformation delete-stack --stack-name udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}
-            aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}
-            aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
-
-  destroy-migrations:
-      docker:
-        # Docker image here that supports NodeJS
-        - image: circleci/node:13.8.0
-        #- image: cimg/node:18.7.0
-      steps:
-        # Checkout code from git
-        - checkout
-
-        - run:
-            name: Destroying ORM Infrastructure
-            command: |
-              cd backend
-              npm install
-              npm run premigrations:revert
-              npm run migrations:revert
-
 workflows:
   default:
     jobs:
-      
+
+      - setup-aws-rds
+      - setup-aws-cloudfront
       - build-frontend:
           context: slack-env
       - build-backend:
@@ -939,7 +833,7 @@ workflows:
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       - run-migrations:
-          requires: [configure-infrastructure]
+          requires: [setup-rds, configure-infrastructure]
       - deploy-frontend:
             requires: [run-migrations]
       # - deploy-frontend:
@@ -950,9 +844,9 @@ workflows:
           requires: [deploy-backend, deploy-frontend]
 
       # - smoke-test
-      # - setup-cloudfront
+      # - setup-aws-cloudfront
       # - setup-s3-bucket:
-      #     requires: [setup-cloudfront]
+      #     requires: [setup-aws-cloudfront]
 
 
 

@@ -40,12 +40,6 @@
   shell: |
     mv backend web
 
-# - name: "Install backend dependencies"
-#   become: true
-#   shell: |
-#     cd web
-#     npm install
-
 - name: "Start server"
   become: true
   shell: |
