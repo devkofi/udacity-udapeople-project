@@ -127,7 +127,7 @@ jobs:
             --publicly-accessible
 
             aws rds create-db-security-group \
-            --db-security-group-name mysecgroup-${CIRCLE_WORKFLOW_ID:0:7} \
+            --db-security-group-name $TYPEORM_INSTANCE_ID-${CIRCLE_WORKFLOW_ID:0:7} \
             --db-security-group-description "My Test Security Group"
             
             aws rds authorize-db-security-group-ingress \
