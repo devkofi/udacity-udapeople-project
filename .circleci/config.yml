@@ -24,6 +24,29 @@ commands:
             aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.workflow_id >>
             #aws rds delete-db-instance --db-instance-identifier $TYPEORM_INSTANCE_ID --final-db-snapshot-identifier SkipFinalSnapShot-<< parameters.workflow_id >>
 
+  revert-migrations:
+    description: Revert the last migration if not successfully run in the current workflow.
+    parameters:
+      # Add parameter here   
+      workflow_id:
+        type: string
+        default: "${CIRCLE_WORKFLOW_ID:0:7}"       
+    steps:
+      - run:
+          name: Revert migrations
+          when: on_fail
+          command: |
+            
+            SUCCESS=$(curl --insecure https://kvdb.io/4hYKp1FLiCJ3uV2tsNAJQZ/migration_<< parameters.workflow_id >>)
+            
+            if ($SUCCESS == 1);
+            then
+                cd backend
+                npm install
+                #npm run premigrations:revert
+                npm run migration:revert
+            fi 
+
   create-to-destroy:
     description: Installs aws to destroy-environment on fail
     parameters:
@@ -68,28 +91,7 @@ commands:
             npm run premigrations:revert
             npm run migrations:revert
       
-  revert-migrations:
-    description: Revert the last migration if not successfully run in the current workflow.
-    parameters:
-      # Add parameter here   
-      workflow_id:
-        type: string
-        default: "${CIRCLE_WORKFLOW_ID:0:7}"       
-    steps:
-      - run:
-          name: Revert migrations
-          when: on_fail
-          command: |
-            
-            export SUCCESS=$(curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_<< parameters.workflow_id >>)
-            
-            if ($SUCCESS != 1);
-            then
-                cd backend
-                npm run premigrations:revert
-                npm run migration:revert
-            fi 
-
+  
 
 #=============================#
 # SLACK NOTIFICATION SETUP    #
@@ -208,7 +210,8 @@ jobs:
   ###################################################
   build-frontend:
     docker:
-      - image: circleci/node:13.8.0
+      #- image: circleci/node:13.8.0
+      - image: cimg/node:18.7.0
     steps:
       - checkout
       - restore_cache:
@@ -245,7 +248,8 @@ jobs:
   ###################################################
   build-backend:
     docker:
-      - image: circleci/node:13.8.0
+      #- image: circleci/node:13.8.0
+      - image: cimg/node:18.7.0
     steps:
       - checkout
       - restore_cache:
@@ -282,7 +286,8 @@ jobs:
   ###################################################
   test-frontend:
     docker:
-      - image: circleci/node:13.8.0
+      #- image: circleci/node:13.8.0
+      - image: cimg/node:18.7.0
     steps:
       # Checkout code from git
       - checkout
@@ -306,7 +311,8 @@ jobs:
   test-backend:
     docker:
       # Docker image here
-      - image: circleci/node:13.8.0
+      #- image: circleci/node:13.8.0
+      - image: cimg/node:18.7.0
     steps:
       # Checkout code from git
       - checkout
@@ -332,7 +338,8 @@ jobs:
   scan-frontend:
     docker:
       # Docker image here
-      - image: circleci/node:13.8.0
+      #- image: circleci/node:13.8.0
+      - image: cimg/node:18.7.0
     steps:
       # Checkout code from git
       - checkout
@@ -360,7 +367,8 @@ jobs:
   scan-backend:
     docker:
       # Docker image here
-      - image: circleci/node:13.8.0
+      #- image: circleci/node:13.8.0
+      - image: cimg/node:18.7.0
     steps:
       # Checkout code from git
       - checkout
@@ -473,6 +481,23 @@ jobs:
           name: Display Ansible etc/ansible contents
           command: |
             ls -al /etc/ansible
+      
+      - run: 
+          name: Install AWS CLI
+          command: |
+            cd $HOME
+            sudo apt install -y curl unzip
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+
+      - run: 
+          name: Install NodeJs and NPM
+          command: |
+            cd $HOME
+            sudo apt install -y nodejs npm
+            node --version
+            npm --version
 
       - run: 
           name: Host Key Checking
@@ -496,7 +521,7 @@ jobs:
             cd .circleci/ansible/
             ansible-playbook -i inventory.txt configure-server.yml
       
-      - create-to-destroy
+      - destroy-environment
       
   
   ###################################################
@@ -509,7 +534,8 @@ jobs:
   run-migrations:
     docker:
       # Docker image here that supports NodeJS
-      - image: circleci/node:13.8.0
+      #- image: circleci/node:13.8.0
+      - image: cimg/node:18.7.0
       #- image: cimg/node:18.7.0
     steps:
       # Checkout code from git
@@ -540,7 +566,7 @@ jobs:
           command: |
             cd backend
             npm install
-            npm run premigrations
+            #npm run premigrations
             npm run migrations > migrations_dump.txt
 
       - run:
@@ -549,15 +575,14 @@ jobs:
             cd backend
             ls -la
             cat migrations_dump.txt
-            sudo apt install -y curl
             if grep -q "has been executed successfully." ./migrations_dump.txt
             then
-                curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_$\{CIRCLE_WORKFLOW_ID:0:7\}  -d '1'
+                curl --insecure https://kvdb.io/4hYKp1FLiCJ3uV2tsNAJQZ/migration_$\{CIRCLE_WORKFLOW_ID:0:7\}  -d '1'
             else
-                curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
+                curl --insecure https://kvdb.io/4hYKp1FLiCJ3uV2tsNAJQZ/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '0'
             fi
             
-            export SUCCESS=$(curl --insecure https://kvdb.io/YRSzGWJG8T1Fu6GGmGELCa/migration_$\{CIRCLE_WORKFLOW_ID:0:7\})
+            SUCCESS=$(curl --insecure https://kvdb.io/4hYKp1FLiCJ3uV2tsNAJQZ/migration_$\{CIRCLE_WORKFLOW_ID:0:7\})
             
             echo SUCCESS=$SUCCESS
 
@@ -573,7 +598,7 @@ jobs:
             paths:
               - .env
      # Here's where you will add some code to rollback on failure      
-      - create-to-destroy
+      - destroy-environment
 
       - revert-migrations
 
@@ -807,9 +832,9 @@ jobs:
               --output text)
 
             echo $BACKEND_IP
-            export API_URL="http://$BACKEND_IP:3030"
-            echo $API_URL
-            if curl "$API_URL/api/status" | grep "ok"
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo ${API_URL}
+            if curl "${API_URL}/api/status" | grep "ok"
             then
                 return 0
             else
@@ -830,9 +855,9 @@ jobs:
             fi
       
       # Here's where you will add some code to rollback on failure  
-      - destroy-environment
+      #- destroy-environment
 
-      - revert-migrations
+      #- revert-migrations
 
 workflows:
   default:
