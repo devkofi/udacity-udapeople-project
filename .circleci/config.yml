@@ -122,11 +122,11 @@ jobs:
             --engine $TYPEORM_CONNECTION \
             --master-username $TYPEORM_USERNAME \
             --master-user-password $TYPEORM_PASSWORD \
-            --allocated-storage $TYPEORM_STORAGE
+            --allocated-storage $TYPEORM_STORAGE \
             --publicly-accessible
 
       - destroy-environment
-
+      
   ###################################################
   # SETUP CLOUDFRONT DISTRIBUTION                   #                                                 
   #                                                 #
