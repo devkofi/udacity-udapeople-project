@@ -130,11 +130,15 @@ jobs:
             --db-security-group-name $TYPEORM_INSTANCE_ID-${CIRCLE_WORKFLOW_ID:0:7} \
             --db-security-group-description "My Test Security Group"
             
-            aws rds authorize-db-security-group-ingress \
-            --db-security-group-name $TYPEORM_INSTANCE_ID-${CIRCLE_WORKFLOW_ID:0:7} \
-            --cidrip 0.0.0.0/0
+            # aws rds authorize-db-security-group-ingress \
+            # --db-security-group-name $TYPEORM_INSTANCE_ID-${CIRCLE_WORKFLOW_ID:0:7} \
+            # --cidrip 0.0.0.0/0
       
-      - destroy-environment
+      - run:
+          name: Destroy environment ${CIRCLE_WORKFLOW_ID:0:7}
+          when: on_fail
+          command: |
+            aws rds delete-db-instance --db-instance-identifier $TYPEORM_INSTANCE_ID --final-db-snapshot-identifier SkipFinalSnapShot-${CIRCLE_WORKFLOW_ID:0:7}
 
   ###################################################
   # SETUP CLOUDFRONT DISTRIBUTION                   #                                                 
