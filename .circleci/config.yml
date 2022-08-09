@@ -838,7 +838,7 @@ workflows:
   default:
     jobs:
 
-      - setup-aws-rds
+      #- setup-aws-rds
       - setup-aws-cloudfront
       - build-frontend:
           context: slack-env
@@ -859,8 +859,10 @@ workflows:
               #only: [test-feature-branch]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
+      # - run-migrations:
+      #     requires: [setup-aws-rds, configure-infrastructure]
       - run-migrations:
-          requires: [setup-aws-rds, configure-infrastructure]
+          requires: [configure-infrastructure]
       - deploy-frontend:
             requires: [run-migrations]
       # - deploy-frontend:
