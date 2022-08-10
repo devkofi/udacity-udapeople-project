@@ -593,10 +593,15 @@ jobs:
               echo ❌
             fi
                   
+      # - persist_to_workspace:
+      #       root: ./backend
+      #       paths:
+      #         - .env
+
       - persist_to_workspace:
-            root: ./backend
+            root: .
             paths:
-              - .env
+              - backend/*
      # Here's where you will add some code to rollback on failure      
       - destroy-environment
 
@@ -619,8 +624,11 @@ jobs:
       - restore_cache:
           keys: [frontend-build]
 
+      #  - attach_workspace:
+      #     at: ./backend
+
       - attach_workspace:
-          at: ./backend
+          at: ./
       
       # Whatever you want to do
       - run: 
@@ -631,10 +639,10 @@ jobs:
             which ansible
             ansible --version
 
-      - run:
-          name: Display Ansible etc/ansible contents
-          command: |
-            ls -al /etc/ansible
+      # - run:
+      #     name: Display Ansible etc/ansible contents
+      #     command: |
+      #       ls -al /etc/ansible
       
       - run: 
           name: Install AWS CLI
@@ -863,8 +871,8 @@ workflows:
   default:
     jobs:
 
-      #- setup-aws-rds
-      - setup-aws-cloudfront
+      # - setup-aws-rds
+      # - setup-aws-cloudfront
       - build-frontend:
           context: slack-env
       - build-backend:
@@ -894,8 +902,8 @@ workflows:
       #     requires: [run-migrations, setup-s3-bucket]
       - deploy-backend:
           requires: [deploy-infrastructure, run-migrations, deploy-frontend]
-      - smoke-test:
-          requires: [deploy-backend, deploy-frontend]
+      # - smoke-test:
+      #     requires: [deploy-backend, deploy-frontend]
 
       # - smoke-test
       # - setup-aws-cloudfront
