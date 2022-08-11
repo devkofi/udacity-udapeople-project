@@ -825,12 +825,12 @@ jobs:
             # unzip awscliv2.zip
             # sudo ./aws/install
 
-      # - run: 
-      #     name: Install NodeJs and NPM
-      #     command: |
-      #       sudo apt install -y nodejs npm
-      #       node --version
-      #       npm --version      
+      - run: 
+          name: Install NodeJs and NPM
+          command: |
+            sudo apt install -y nodejs npm
+            node --version
+            npm --version      
 
       - run:
           name: Backend smoke test
