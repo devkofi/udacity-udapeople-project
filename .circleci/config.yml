@@ -923,7 +923,7 @@ jobs:
           name: Destroy Migrations
           command: |
             
-            SUCCESS=${curl --insecure https://kvdb.io/4hYKp1FLiCJ3uV2tsNAJQZ/migration_<< parameters.workflow_id >>}
+            SUCCESS=${curl --insecure https://kvdb.io/4hYKp1FLiCJ3uV2tsNAJQZ/migration_$\{CIRCLE_WORKFLOW_ID:0:7\}}
             
             if ((SUCCESS == 1))
             then
