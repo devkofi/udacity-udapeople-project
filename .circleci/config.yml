@@ -37,7 +37,7 @@ commands:
           when: on_fail
           command: |
             
-            SUCCESS=$(curl --insecure https://kvdb.io/4hYKp1FLiCJ3uV2tsNAJQZ/migration_<< parameters.workflow_id >>)
+            SUCCESS=${curl --insecure https://kvdb.io/4hYKp1FLiCJ3uV2tsNAJQZ/migration_<< parameters.workflow_id >>}
             
             if (SUCCESS == 1)
             then
@@ -844,10 +844,10 @@ jobs:
             if (curl -s "${API_URL}/api/status" | grep "ok")
             then
               echo "Backend Test Passed ✅"
-              return 0
+              #return 0
             else
               echo "Backend Test Failed ❌"
-              return 1
+              #return 1
             fi
 
       - run:
