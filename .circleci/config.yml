@@ -842,7 +842,7 @@ jobs:
             echo $BACKEND_IP
             export API_URL="https://kvdb.io/"
             echo ${API_URL}
-            if ((curl -s $API_URL | grep "plausible"))
+            if (curl -s $API_URL | grep "plausible")
             then
               echo "Backend Test Passed ✅"
               #return 0
