@@ -39,7 +39,7 @@ commands:
             
             SUCCESS=$(curl --insecure https://kvdb.io/4hYKp1FLiCJ3uV2tsNAJQZ/migration_<< parameters.workflow_id >>)
             
-            if ((SUCCESS == 1))
+            if SUCCESS==1
             then
               cd backend
               npm install
@@ -860,10 +860,10 @@ jobs:
             then
               # Change this to 0 after the job fails
               echo "Fronted Test Passed ✅"
-              return 0
+              exit 0
             else
               echo "Fronted Test Failed ❌"
-              return 1
+              exit 1
             fi
       
       # Here's where you will add some code to rollback on failure  
