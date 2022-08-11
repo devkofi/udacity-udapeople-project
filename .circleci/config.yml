@@ -839,9 +839,9 @@ jobs:
               --output text)
 
             echo $BACKEND_IP
-            export API_URL="http://${BACKEND_IP}:3030"
+            export API_URL="http://$BACKEND_IP:3030"
             echo ${API_URL}
-            if (curl -s "${API_URL}/api/status" | grep "ok")
+            if (curl -s "$API_URL/api/status" | grep "ok")
             then
               echo "Backend Test Passed ✅"
               #return 0
@@ -859,7 +859,7 @@ jobs:
             then
               # Change this to 0 after the job fails
               #echo "Fronted Test Passed ✅"
-              return 1
+              return 0
             else
               #echo "Fronted Test Failed ❌"
               return 1
