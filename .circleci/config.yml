@@ -845,10 +845,10 @@ jobs:
             if ((curl -s $API_URL | grep "plausible"))
             then
               echo "Backend Test Passed ✅"
-              return 0
+              #return 0
             else
               echo "Backend Test Failed ❌"
-              return 1
+              #return 1
             fi
 
       - run:
