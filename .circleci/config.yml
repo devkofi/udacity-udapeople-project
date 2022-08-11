@@ -585,11 +585,11 @@ jobs:
             
             echo SUCCESS=$SUCCESS
 
-            if ($SUCCESS==1)
+            if SUCCESS==1
             then
-              echo ✅
+              echo ✅ No Pending Migrations
             else
-              echo ❌
+              echo ❌ Pending Migrations
             fi
                   
       # - persist_to_workspace:
@@ -841,7 +841,7 @@ jobs:
             echo $BACKEND_IP
             export API_URL="http://$BACKEND_IP:3030"
             echo ${API_URL}
-            if curl -s "$API_URL/api/status" | grep "ok"
+            if curl -Is "$API_URL/api/status" | grep "OK"
             then
               echo "Backend Test Passed ✅"
               #return 0
@@ -859,7 +859,7 @@ jobs:
             then
               # Change this to 0 after the job fails
               #echo "Fronted Test Passed ✅"
-              exit 0
+              exit 1
             else
               #echo "Fronted Test Failed ❌"
               exit 1
