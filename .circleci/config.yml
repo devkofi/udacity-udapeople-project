@@ -43,8 +43,7 @@ commands:
             then
               cd backend
               npm install
-              #npm run premigrations:revert
-              npm run migration:revert
+              npm run migrations:revert
             fi 
 
   create-to-destroy:
@@ -174,7 +173,17 @@ jobs:
               --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}\
               --parameter-overrides WorkflowID=udapeople-kk1j287dhjp437knk
 
-      - destroy-environment
+      - run:
+          name: Execute bucket.yml - Create Cloudformation Stack
+          command: |
+            aws cloudformation deploy \
+            --template-file bucket.yml \
+            --stack-name stack-create-bucket-${CIRCLE_WORKFLOW_ID:0:7} \
+            --parameter-overrides MyBucketName="mybucket-${CIRCLE_WORKFLOW_ID:0:7}"
+    
+      # Uncomment the step below if yoou wish to upload all contents of the current directory to the S3 bucket
+      - run: aws s3 sync . s3://mybucket-${CIRCLE_WORKFLOW_ID:0:7} --delete
+          - destroy-environment
 
   ###################################################
   # SETUP S3 BUCKET FOR HOSTING                     #                                                 
@@ -929,7 +938,7 @@ jobs:
             then
               cd backend
               npm install
-              npm run migration:revert
+              npm run migrations:revert
             fi 
 
 workflows:
