@@ -1,0 +1,61 @@
+Description: CloudFormation template for s3 bucket
+
+
+Parameters:
+  # New Bucket name
+  MyBucketName:
+    Description: Existing Bucket name
+    Type: String
+
+Resources:
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${udapeople-kk1j287dhjp437knk}"
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref 'WebsiteBucket'
+      PolicyDocument:
+        Statement:
+        - Sid: PublicReadForGetBucketObjects
+          Effect: Allow
+          Principal: '*'
+          Action: s3:GetObject
+          Resource: !Join ['', ['arn:aws:s3:::', !Ref 'WebsiteBucket', /*]]
+
+# Parameters:
+#   BucketID:
+#     Description: Unique identifier.
+#     Type: String
+
+# Resources:
+#   S3Bucket:
+#     Description: Bucket for udapeople Udacity project
+#     Type: AWS::S3::Bucket
+#     Properties:
+#       AccessControl: PublicRead
+#       BucketName: udapeople-kk1j287dhjp437knk
+#       PublicAccessBlockConfiguration:
+#         BlockPublicAcls: false
+#         BlockPublicPolicy: false
+#         IgnorePublicAcls: false
+#         RestrictPublicBuckets: false
+
+
+# Outputs:
+#   BucketID:
+#     Description: s3 Bucket for hosting content
+#     Value: !Sub ${BucketID}
+#     Export:
+#       Name: BucketID
+
+#   S3Bucket:
+#     Description: Bucket Created using this template.
+#     Value: !Ref S3Bucket
+#     Export:
+#       Name: S3Bucket
