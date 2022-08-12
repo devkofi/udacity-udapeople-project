@@ -175,12 +175,6 @@ jobs:
             --parameter-overrides GreenBucketID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
             --tags project=udapeople
       
-      
-      - persist_to_workspace:
-          root: ~/
-          paths: 
-            - bucketID.txt
-  
   
   ###################################################
   # SETUP CLOUDFRONT DISTRIBUTION                   #                                                 
