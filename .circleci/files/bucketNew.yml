@@ -1,6 +1,6 @@
 Parameters:
   # New Bucket name
-  MyBucketName:
+  GreenBucketID:
     Description: Existing Bucket name
     Type: String
 
@@ -8,7 +8,7 @@ Resources:
   WebsiteBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${MyBucketName}"
+      BucketName: !Sub "${GreenBucketID}"
       AccessControl: PublicRead
       WebsiteConfiguration:
         IndexDocument: index.html

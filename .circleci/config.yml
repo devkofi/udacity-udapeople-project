@@ -90,7 +90,6 @@ commands:
             npm run premigrations:revert
             npm run migrations:revert
       
-  
 
 #=============================#
 # SLACK NOTIFICATION SETUP    #
@@ -142,6 +141,47 @@ jobs:
             aws rds delete-db-instance --db-instance-identifier $TYPEORM_INSTANCE_ID --final-db-snapshot-identifier SkipFinalSnapShot-${CIRCLE_WORKFLOW_ID:0:7}
 
   ###################################################
+  # SETUP S3 BUCKET FOR HOSTING                     #                                                 
+  #                                                 #
+  #   This will help us set a storage service that  #
+  #   that will help us host the content of our     #
+  #   application                                   #
+  ###################################################
+  setup-s3-bucket:
+    docker:
+      # Docker image here that supports AWS CLI
+      - image: amazon/aws-cli
+    steps:
+      # Checkout code from git
+      - checkout
+
+      - run:
+          name: Setup Initial S3 Bucket For Blue Deploy
+          command: |
+            cd .circleci/files
+            aws cloudformation deploy \
+              --template-file bucketOld.yml \
+              --stack-name "udapeople-s3-blue-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides BlueBucketID="udapeople-kk1j287dhjp437knk"  \
+              --tags project=udapeople
+      
+      - run:
+          name: Setup Initial S3 Bucket For Green Deploy
+          command: |
+            aws cloudformation deploy \
+            --template-file bucketNew.yml \
+            --stack-name udapeople-s3-green-${CIRCLE_WORKFLOW_ID:0:7} \
+            --parameter-overrides GreenBucketID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --tags project=udapeople
+      
+      
+      - persist_to_workspace:
+          root: ~/
+          paths: 
+            - bucketID.txt
+  
+  
+  ###################################################
   # SETUP CLOUDFRONT DISTRIBUTION                   #                                                 
   #                                                 #
   #   Using the Blue Green Deployment strategy this #
@@ -172,44 +212,10 @@ jobs:
               --template-file cloudfront.yml \
               --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7}\
               --parameter-overrides WorkflowID=udapeople-kk1j287dhjp437knk
+      
+      - destroy-environment
 
-      - run:
-          name: Execute bucket.yml - Create Cloudformation Stack
-          command: |
-            aws cloudformation deploy \
-            --template-file bucket.yml \
-            --stack-name stack-create-bucket-${CIRCLE_WORKFLOW_ID:0:7} \
-            --parameter-overrides MyBucketName="mybucket-${CIRCLE_WORKFLOW_ID:0:7}"
-    
-      # Uncomment the step below if yoou wish to upload all contents of the current directory to the S3 bucket
-      - run: aws s3 sync . s3://mybucket-${CIRCLE_WORKFLOW_ID:0:7} --delete
-          - destroy-environment
-
-  ###################################################
-  # SETUP S3 BUCKET FOR HOSTING                     #                                                 
-  #                                                 #
-  #   This will help us set a storage service that  #
-  #   that will help us host the content of our     #
-  #   application                                   #
-  ###################################################
-  setup-s3-bucket:
-    docker:
-      # Docker image here that supports AWS CLI
-      - image: amazon/aws-cli
-    steps:
-      # Checkout code from git
-      - checkout
-
-      - run:
-          name: Setup S3 Bucket For Hosting
-          command: |
-            cd .circleci/files
-            aws cloudformation deploy \
-              --template-file s3.yml \
-              --stack-name "udapeople-s3-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides BucketID="udapeople-kk1j287dhjp437knk"  \
-              --tags project=udapeople
-              
+           
   ###################################################
   # BUILD FRONT END WITH NOTIFICATIONS              #                                                 
   #                                                 #
@@ -246,6 +252,11 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
+
+      - persist_to_workspace:
+            root: .
+            paths: 
+              - frontend/*
 
 
   ###################################################
@@ -310,6 +321,7 @@ jobs:
             cd frontend
             npm run test    
 
+
   ###################################################
   # TEST BACK-END                                   #                                                 
   #                                                 #
@@ -336,6 +348,7 @@ jobs:
           command: |
             cd backend
             npm run test
+
 
   ###################################################
   # CHECK FOR FRONT END VULNERABILITIES             #                                                 
@@ -365,7 +378,8 @@ jobs:
             npm install
             npm install oauth-sign@^0.9.0
             npm audit fix --audit-level=critical --force
-  
+
+
   ###################################################
   # CHECK FOR BACK-END VULNERABILITIES              #                                                 
   #                                                 #
@@ -615,6 +629,7 @@ jobs:
 
       - revert-migrations
 
+
   ###################################################
   # DEPLOY FRONTEND                                 #                                                 
   #                                                 #
@@ -636,7 +651,7 @@ jobs:
       #     at: ./backend
 
       - attach_workspace:
-          at: ./
+          at: ./frontend
       
       # Whatever you want to do
       - run: 
@@ -646,7 +661,7 @@ jobs:
             sudo apt install -y ansible
             which ansible
             ansible --version
-
+    
       # - run:
       #     name: Display Ansible etc/ansible contents
       #     command: |
@@ -685,8 +700,11 @@ jobs:
           name: Deploy frontend objects
           command: |
             cd frontend
+            cat frontend/.env 
             npm install
             npm run build
+            ls -la
+            ls -la dist
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       #aws s3 cp dist s3://udapeople-kk1j287dhjp437knk --recursive
@@ -694,6 +712,7 @@ jobs:
       - destroy-environment
 
       - revert-migrations
+
 
   ###################################################
   # DEPLOY BACKEND                                  #                                                 
@@ -878,14 +897,157 @@ jobs:
 
       - revert-migrations
 
+
   ###################################################
-  # DESTROY AND SAVE RESOURCES                      #                                                 
+  # SYNC TO GREEN BUILD BUCKET                      #                                                 
+  #                                                 #
+  #   This will sync the contents of the current    #
+  #   directory to the s3 bucket given              #
+  #                                                 #
+  ################################################### 
+  sync-to-s3-green-bucket:
+    docker:
+      # Docker image here that supports AWS CLI
+      - image: amazon/aws-cli
+    steps:
+      # Checkout code from git
+      - checkout
+      
+      # Uncomment the step below if you wish to upload all contents of the current directory to the S3 bucket
+      - run: 
+          name: Sync to bucket
+          command: |
+            cd frontend
+            aws s3 sync . s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --delete   
+      
+ 
+  ###################################################
+  # CLOUD FRONT UPDATE                              #                                                 
   #                                                 #
   #   This will destroy all aws instances and all   #
   #   database migrations                           #
   #                                                 #
   ################################################### 
-  
+  cloudfront-update:
+    docker:
+      # Docker image here that supports AWS CLI
+      # - image: amazon/aws-cli
+      - image: cimg/base:2022.08
+    steps:
+      # Checkout code from git
+      - checkout
+
+      - run: 
+          name: Install AWS CLI
+          command: |
+            cd $HOME
+            sudo apt install -y curl unzip
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      
+      - run: 
+          name: Install NodeJs and NPM
+          command: |
+            cd $HOME
+            sudo apt install -y nodejs npm
+            node --version
+            npm --version
+
+      # - run:
+      #     name: Update cloudfront distribution
+      #     command: |
+      #       aws cloudformation deploy \
+      #       --template-file cloudfront.yml \
+      #       --stack-name production-distro \
+      #       --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}"
+      - run:
+          name: Fetch and save the old pipeline ID (bucket name) responsible for the last release.
+          command: |
+            export OldWorkflowID=$(aws cloudformation \
+            list-exports --query "Exports[?Name==\`BucketID\`].Value" \
+            --no-paginate --output text)
+            
+            echo $OldWorkflowID > ~/OldWorkflowID.txt
+            cat ~/OldWorkflowID.txt
+      
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            cd .circleci/files
+            aws cloudformation deploy \
+              --template-file cloudfront.yml \
+              --stack-name InitialStack \
+              --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=udapeople
+      
+      - persist_to_workspace:
+          root: ~/
+          paths: 
+            - OldWorkflowID.txt
+            
+
+      # Here's where you will add some code to rollback on failure  
+      - destroy-environment
+
+      - revert-migrations
+
+  ###################################################
+  # CLEAN UP OLD DEPLOYMENT                         #                                                 
+  #                                                 #
+  #   Since we are adopting the blue-green strategy #
+  #   it would be ideal to delete any unused        #
+  #   resources                                     #
+  ################################################### 
+  cleanup:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run: yum install -y tar gzip
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Get old stack workflow id
+          command: |
+            
+            export OldWorkflowID=$(cat ~/OldWorkflowID.txt)
+            export STACKS=[udapeople-s3-blue-${CIRCLE_WORKFLOW_ID:0:7}, udapeople-s3-green-${CIRCLE_WORKFLOW_ID:0:7}] #put the list of stacks here
+
+            echo OldWorkflowID: "${OldWorkflowID}"
+            echo CIRCLE_WORKFLOW_ID: "${CIRCLE_WORKFLOW_ID:0:7}"
+      
+      # - run:
+      #     name: Destroy the previous S3 bucket and CloudFormation stack. 
+      #     # Use $OldBucketID environment variable or mybucket644752792305 below.
+      #     # Similarly, you can create and use $OldStackID environment variable in place of production-distro 
+      #     command: |
+      #       export OldBucketID=$(cat ~/bucketID.txt)
+      #       aws s3 rm "s3://${OldBucketID}" --recursive
+      #       aws cloudformation delete-stack --stack-name "udapeople-s3-blue-${CIRCLE_WORKFLOW_ID:0:7}"
+
+      - run:
+          name: Remove old stacks and files
+          command: |
+            # Fetch the stack names          
+            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+                    --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+            echo Stack names: "${STACKS[@]}"  
+            
+            if [[ "${STACKS[@]}" =~ "${BlueBucketID}" ]]
+            then
+              aws s3 rm "s3://${BlueBucketID}" --recursive
+              aws cloudformation delete-stack --stack-name "udapeople-s3-blue-${CIRCLE_WORKFLOW_ID:0:7}"
+
+            fi
+      
+  ###################################################
+  # DESTROY AND SAVE RESOURCES                      #                                                 
+  #                                                 #
+  #   This job should be run on a different branch  #
+  #   without running any other jobs to delete all  #
+  #   aws and database resources                    #
+  ###################################################  
   destroy-and-save-resources:
     docker:
       # Docker image here
@@ -977,7 +1139,9 @@ workflows:
           requires: [deploy-infrastructure, run-migrations, deploy-frontend]
       - smoke-test:
           requires: [deploy-backend, deploy-frontend]
-
+      - cloudfront-update:
+          requires: [smoke-test]
+      
       # - smoke-test
       # - setup-aws-cloudfront
       # - setup-s3-bucket:
