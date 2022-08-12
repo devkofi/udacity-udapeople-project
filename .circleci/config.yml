@@ -1107,7 +1107,8 @@ workflows:
     jobs:
 
       # - setup-aws-rds
-      # - setup-aws-cloudfront
+      - setup-s3-bucket
+      - setup-aws-cloudfront
       - build-frontend:
           context: slack-env
       - build-backend:
