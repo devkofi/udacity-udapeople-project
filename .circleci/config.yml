@@ -685,20 +685,22 @@ jobs:
       - run:
           name: Get backend url
           command: |
+            cd frontend
             ls -la
             export BACKEND_IP=$(aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "API_URL = ${API_URL}"
-            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
-            cat frontend/.env
+            echo API_URL="http://${BACKEND_IP}:3030" > frontend/.env
+            cat .env
       
       - run:
           name: Deploy frontend objects
           command: |
             cd frontend
-            cat frontend/.env 
+            ls -la
+            cat .env 
             npm install
             npm run build
             ls -la
