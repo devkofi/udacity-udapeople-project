@@ -5,7 +5,7 @@ Parameters:
     Type: String
 
 Resources:
-  WebsiteBucket:
+  GreenWebsiteBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub "${GreenBucketID}"
@@ -16,11 +16,28 @@ Resources:
   WebsiteBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref 'WebsiteBucket'
+      Bucket: !Ref 'GreenWebsiteBucket'
       PolicyDocument:
         Statement:
         - Sid: PublicReadForGetBucketObjects
           Effect: Allow
           Principal: '*'
           Action: s3:GetObject
-          Resource: !Join ['', ['arn:aws:s3:::', !Ref 'WebsiteBucket', /*]]
+          Resource: !Join ['', ['arn:aws:s3:::', !Ref 'GreenWebsiteBucket', /*]]
+
+Outputs:
+  WebsiteURL:
+    Value: !GetAtt GreenWebsiteBucket.WebsiteURL
+    Description: URL for website hosted on S3
+
+  BucketID:
+    Description: s3 Bucket for hosting content
+    Value: !Sub ${GreenBucketID}
+    Export:
+      Name: GreenBucketID
+
+  GreenWebsiteBucket:
+    Description: Bucket Created using this template.
+    Value: !Ref GreenWebsiteBucket
+    Export:
+      Name: GreenWebsiteBucket
