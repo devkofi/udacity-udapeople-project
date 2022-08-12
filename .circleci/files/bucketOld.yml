@@ -11,7 +11,7 @@ Resources:
   WebsiteBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${udapeople-kk1j287dhjp437knk}"
+      BucketName: !Sub "${BlueBucketID}"
       AccessControl: PublicRead
       WebsiteConfiguration:
         IndexDocument: index.html
@@ -27,6 +27,21 @@ Resources:
           Principal: '*'
           Action: s3:GetObject
           Resource: !Join ['', ['arn:aws:s3:::', !Ref 'WebsiteBucket', /*]]
+
+
+# Outputs:
+#   BucketID:
+#     Description: s3 Bucket for hosting content
+#     Value: !Sub ${BlueBucketID}
+#     Export:
+#       Name: BlueBucketID
+
+#   WebsiteBucket:
+#     Description: Bucket Created using this template.
+#     Value: !Ref WebsiteBucket
+#     Export:
+#       Name: WebsiteBucket
+
 
 # Parameters:
 #   BucketID:

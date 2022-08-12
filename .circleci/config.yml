@@ -160,10 +160,10 @@ jobs:
           command: |
             cd .circleci/files
             aws cloudformation deploy \
-              --template-file bucketOld.yml \
-              --stack-name "udapeople-s3-blue-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --parameter-overrides BlueBucketID="udapeople-kk1j287dhjp437knk"  \
-              --tags project=udapeople
+            --template-file bucketOld.yml \
+            --stack-name "udapeople-s3-blue-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --parameter-overrides BlueBucketID="udapeople-kk1j287dhjp437knk"  \
+            --tags project=udapeople
       
       - run:
           name: Setup Initial S3 Bucket For Green Deploy
