@@ -3,7 +3,7 @@ Description: CloudFormation template for s3 bucket
 
 Parameters:
   # New Bucket name
-  BucketID:
+  BlueBucketID:
     Description: Existing Bucket name
     Type: String
 
