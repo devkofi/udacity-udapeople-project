@@ -207,7 +207,7 @@ jobs:
             aws cloudformation deploy \
             --template-file cloudfront.yml \
             --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7} \
-            --parameter-overrides WorkflowID="udapeople-kk1j287dhjp437knk"
+            --parameter-overrides WorkflowID="kk1j287dhjp437knk"
       
       - destroy-environment
 
@@ -975,9 +975,10 @@ jobs:
             cd .circleci/files
             aws cloudformation deploy \
             --template-file cloudfront.yml \
-            --stack-name InitialStack \
-            --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7} \
+            --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
             --tags project=udapeople
+          #--parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
       
       - persist_to_workspace:
           root: ~/

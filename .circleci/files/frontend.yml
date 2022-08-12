@@ -1,9 +1,8 @@
 Description: UdaPeople frontend stack
 
-
 Parameters:
   # New Bucket name
-  BlueBucketID:
+  ID:
     Description: Unique identifier
     Type: String
 
@@ -11,7 +10,7 @@ Resources:
   BlueWebsiteBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${BlueBucketID}"
+      BucketName: !Sub "udapeople-s3-blue-${ID}"
       AccessControl: PublicRead
       WebsiteConfiguration:
         IndexDocument: index.html
@@ -32,18 +31,6 @@ Outputs:
   WebsiteURL:
     Value: !GetAtt BlueWebsiteBucket.WebsiteURL
     Description: URL for website hosted on S3
-
-  BucketID:
-    Description: s3 Bucket for hosting content
-    Value: !Sub ${BlueBucketID}
-    Export:
-      Name: BlueBucketID
-
-  BlueWebsiteBucket:
-    Description: Bucket Created using this template.
-    Value: !Ref BlueWebsiteBucket
-    Export:
-      Name: BlueWebsiteBucket
 
 # Description: >
 #   UdaPeople frontend stack.
