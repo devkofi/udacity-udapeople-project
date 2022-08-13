@@ -682,21 +682,24 @@ jobs:
             unzip awscliv2.zip
             sudo ./aws/install
 
-      - run: 
-          name: Install NodeJs and NPM
-          command: |
-            cd $HOME
-            sudo apt install -y nodejs npm
-            node --version
-            npm --version
-
-      # - run:
-      #     name: Install nvm for Node and NPM
+      # - run: 
+      #     name: Install NodeJs and NPM
       #     command: |
-      #       curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-      #       export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || \
-      #       printf %s "${XDG_CONFIG_HOME}/nvm")" [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-      #       source ~/.bashrc
+      #       cd $HOME
+      #       sudo apt install -y nodejs npm
+      #       node --version
+      #       npm --version
+
+      - run:
+          name: Install nvm for Node and NPM
+          command: |
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+            export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || \
+            printf %s "${XDG_CONFIG_HOME}/nvm")" [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+            source ~/.bashrc
+            nvm install 13.8.0 &&
+            nvm use node
+            node -v
 
       - run:
           name: Get backend url
@@ -715,6 +718,7 @@ jobs:
           name: Deploy frontend objects
           command: |
             cd frontend
+            node -v
             ls -la
             cat .env 
             npm install
@@ -1137,46 +1141,57 @@ workflows:
     jobs:
       # - setup-aws-rds
       - setup-s3-bucket
-      - setup-aws-cloudfront:
-          requires: [setup-s3-bucket]
-      - build-frontend:
-          context: slack-env
-      - build-backend:
-          context: slack-env
-      - test-frontend:
-          requires: [build-frontend]
-      - test-backend:
-          requires: [build-backend]
-      - scan-backend:
-          requires: [build-backend]
-      - scan-frontend:
-          requires: [build-frontend]
-      - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-          #filters:
-            #branches:
-              #only: [test-feature-branch]
-      - configure-infrastructure:
-          requires: [deploy-infrastructure]
-      # - run-migrations:
-      #     requires: [setup-aws-rds, configure-infrastructure]
-      - run-migrations:
-          requires: [configure-infrastructure]
-      - deploy-frontend:
-            requires: [run-migrations]
-      # - deploy-frontend:
-      #     requires: [run-migrations, setup-s3-bucket]
-      - deploy-backend:
-          requires: [deploy-infrastructure, run-migrations, deploy-frontend]
-      - smoke-test:
-          requires: [deploy-backend, deploy-frontend]
-      - cloudfront-update:
-          requires: [smoke-test]
+      # - setup-aws-cloudfront:
+      #     requires: [setup-s3-bucket]
+      # - build-frontend:
+      #     context: slack-env
+      # - build-backend:
+      #     context: slack-env
+      # - test-frontend:
+      #     requires: [build-frontend]
+      # - test-backend:
+      #     requires: [build-backend]
+      # - scan-backend:
+      #     requires: [build-backend]
+      # - scan-frontend:
+      #     requires: [build-frontend]
+      # - deploy-infrastructure:
+      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      #     #filters:
+      #       #branches:
+      #         #only: [test-feature-branch]
+      # - configure-infrastructure:
+      #     requires: [deploy-infrastructure]
       
+      # - run-migrations:
+      #     requires: [configure-infrastructure]
+      # - deploy-frontend:
+      #       requires: [run-migrations]
+      
+      # - deploy-backend:
+      #     requires: [deploy-infrastructure, run-migrations, deploy-frontend]
+      # - smoke-test:
+      #     requires: [deploy-backend, deploy-frontend]
+      # - cloudfront-update:
+      #     requires: [smoke-test]
+      
+      - deploy-frontend
+
+
+
+
+
+
+
+
       # - smoke-test
       # - setup-aws-cloudfront
       # - setup-s3-bucket:
       #     requires: [setup-aws-cloudfront]
+      # - run-migrations:
+      #     requires: [setup-aws-rds, configure-infrastructure]
+      # - deploy-frontend:
+      #     requires: [run-migrations, setup-s3-bucket]
 
 
 
