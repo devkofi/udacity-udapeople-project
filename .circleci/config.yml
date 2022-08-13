@@ -649,9 +649,9 @@ jobs:
     steps:
       - checkout
 
-      # Restore from cache
-      - restore_cache:
-          keys: [frontend-build]
+      # # Restore from cache
+      # - restore_cache:
+      #     keys: [frontend-build]
 
       #  - attach_workspace:
       #     at: ./backend
@@ -690,6 +690,14 @@ jobs:
             node --version
             npm --version
 
+      # - run:
+      #     name: Install nvm for Node and NPM
+      #     command: |
+      #       curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+      #       export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || \
+      #       printf %s "${XDG_CONFIG_HOME}/nvm")" [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+      #       source ~/.bashrc
+
       - run:
           name: Get backend url
           command: |
@@ -709,7 +717,7 @@ jobs:
             cd frontend
             ls -la
             cat .env 
-            #npm install
+            npm install
             npm run build
             ls -la
             ls -la dist
