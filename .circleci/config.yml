@@ -693,13 +693,14 @@ jobs:
       - run:
           name: Install nvm for Node and NPM
           command: |
+            ls ~/
             curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-            export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || \
-            printf %s "${XDG_CONFIG_HOME}/nvm")" [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-            source ~/.bashrc
             nvm install 13.8.0 &&
             nvm use node
             node -v
+          # export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || \
+          # printf %s "${XDG_CONFIG_HOME}/nvm")" [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+          # source ~/.bashrc
 
       - run:
           name: Get backend url
@@ -729,9 +730,9 @@ jobs:
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       #aws s3 cp dist s3://udapeople-kk1j287dhjp437knk --recursive
       # Here's where you will add some code to rollback on failure      
-      - destroy-environment
+      #- destroy-environment
 
-      - revert-migrations
+      #- revert-migrations
 
 
   ###################################################
@@ -1140,7 +1141,7 @@ workflows:
   default:
     jobs:
       # - setup-aws-rds
-      - setup-s3-bucket
+      # - setup-s3-bucket
       # - setup-aws-cloudfront:
       #     requires: [setup-s3-bucket]
       # - build-frontend:
