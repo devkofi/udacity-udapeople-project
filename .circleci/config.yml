@@ -104,6 +104,13 @@ orbs:
 #=============================#            
 jobs:
 
+  ###################################################
+  # SETUP AWS RDS FOR DATABASE MIGRATIONS           #
+  #                                                 #
+  #   This will help us set a database on aws for   #
+  #   or database migrations for the application    #
+  #                                                 #
+  ###################################################
   setup-aws-rds:
     docker:
       # Docker image here that supports AWS CLI
@@ -141,8 +148,9 @@ jobs:
           command: |
             aws rds delete-db-instance --db-instance-identifier $TYPEORM_INSTANCE_ID --final-db-snapshot-identifier SkipFinalSnapShot-${CIRCLE_WORKFLOW_ID:0:7}
 
+
   ###################################################
-  # SETUP S3 BUCKET FOR HOSTING                     #                                                 
+  # SETUP S3 BUCKET FOR HOSTING                     #
   #                                                 #
   #   This will help us set a storage service that  #
   #   that will help us host the content of our     #
@@ -701,7 +709,7 @@ jobs:
             cd frontend
             ls -la
             cat .env 
-            npm install
+            #npm install
             npm run build
             ls -la
             ls -la dist
@@ -993,6 +1001,7 @@ jobs:
 
       - revert-migrations
 
+
   ###################################################
   # CLEAN UP OLD DEPLOYMENT                         #                                                 
   #                                                 #
@@ -1041,7 +1050,8 @@ jobs:
               aws cloudformation delete-stack --stack-name "udapeople-s3-blue-${CIRCLE_WORKFLOW_ID:0:7}"
 
             fi
-      
+
+
   ###################################################
   # DESTROY AND SAVE RESOURCES                      #                                                 
   #                                                 #
@@ -1104,10 +1114,19 @@ jobs:
               npm run migrations:revert
             fi 
 
+
+
+###################################################
+# WORKFLOWS --> JOBS                              #                                                 
+#                                                 #
+#   Execute all workflows here.                   #
+#   This is a step-by-step process of ensuring    #
+#   all tasks in a particular job are executed    #
+#   with their requirements.                      #
+###################################################  
 workflows:
   default:
     jobs:
-
       # - setup-aws-rds
       - setup-s3-bucket
       - setup-aws-cloudfront:
