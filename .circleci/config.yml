@@ -659,6 +659,20 @@ jobs:
       - attach_workspace:
           at: ./frontend
       
+      - run:
+          name: Install nvm for Node and NPM
+          command: |
+            ls ~/
+            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+            source ~/.profile
+            source ~/.bashrc
+            nvm install 13.8.0 &&
+            nvm use node
+            node -v
+          # export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || \
+          # printf %s "${XDG_CONFIG_HOME}/nvm")" [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+          # source ~/.bashrc
+
       # Whatever you want to do
       - run: 
           name: Install Ansible
@@ -690,18 +704,7 @@ jobs:
       #       node --version
       #       npm --version
 
-      - run:
-          name: Install nvm for Node and NPM
-          command: |
-            ls ~/
-            curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-            nvm install 13.8.0 &&
-            nvm use node
-            node -v
-          # export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || \
-          # printf %s "${XDG_CONFIG_HOME}/nvm")" [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-          # source ~/.bashrc
-
+      
       - run:
           name: Get backend url
           command: |
