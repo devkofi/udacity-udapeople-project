@@ -262,6 +262,7 @@ jobs:
             root: .
             paths: 
               - frontend/*
+      
 
 
   ###################################################
@@ -651,14 +652,14 @@ jobs:
       - checkout
 
       # Restore from cache
-      # - restore_cache:
-      #     keys: [frontend-build]
-
-      #  - attach_workspace:
-      #     at: ./backend
+      - restore_cache:
+          keys: [frontend-build]
 
       - attach_workspace:
-          at: ./frontend
+        at: ./backend
+
+      # - attach_workspace:
+      #     at: ./frontend
       
       # - run: 
       #     name: Install NodeJs and NPM
