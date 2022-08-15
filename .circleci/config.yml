@@ -262,7 +262,6 @@ jobs:
             root: .
             paths: 
               - frontend/*
-      
 
 
   ###################################################
@@ -1141,8 +1140,8 @@ workflows:
     jobs:
       # - setup-aws-rds
       - setup-s3-bucket
-      # - setup-aws-cloudfront:
-      #     requires: [setup-s3-bucket]
+      - setup-aws-cloudfront:
+          requires: [setup-s3-bucket]
       - build-frontend:
           context: slack-env
       - build-backend:
@@ -1170,8 +1169,8 @@ workflows:
           requires: [deploy-infrastructure, run-migrations, deploy-frontend]
       - smoke-test:
           requires: [deploy-backend, deploy-frontend]
-      # - cloudfront-update:
-      #     requires: [smoke-test]
+      - cloudfront-update:
+          requires: [smoke-test]
       
 
 
