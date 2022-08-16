@@ -980,27 +980,38 @@ jobs:
       #       --template-file cloudfront.yml \
       #       --stack-name production-distro \
       #       --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}"
-      - run:
-          name: Fetch and save the old pipeline ID (bucket name) responsible for the last release.
-          command: |
-            export OldWorkflowID=$(aws cloudformation \
-            list-exports --query "Exports[?Name==\`BucketID\`].Value" \
-            --no-paginate --output text)
+      # - run:
+      #     name: Fetch and save the old pipeline ID (bucket name) responsible for the last release.
+      #     command: |
+      #       export OldWorkflowID=$(aws cloudformation \
+      #       list-exports --query "Exports[?Name==\`BlueBucketID\`].Value" \
+      #       --no-paginate --output text)
             
-            echo $OldWorkflowID > ~/OldWorkflowID.txt
-            cat ~/OldWorkflowID.txt
+      #       echo $OldWorkflowID > ~/OldWorkflowID.txt
+      #       cat ~/OldWorkflowID.txt
       
       - run:
           name: Update cloudfront distribution
           command: |
+            export OldWorkflowID=$(aws cloudformation \
+            list-exports --query "Exports[?Name==\`BlueBucketID\`].Value" \
+            --no-paginate --output text)
+            
+            echo $OldWorkflowID > ~/OldWorkflowID.txt
+            cat ~/OldWorkflowID.txt
+
             cd .circleci/files
             aws cloudformation deploy \
             --template-file cloudfront.yml \
             --stack-name udapeople-cloudfront-${CIRCLE_WORKFLOW_ID:0:7} \
             --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
             --tags project=udapeople
+
+            echo "OldWorkflowID: ${OldWorkflowID}"
+            echo "Current Workflow Id: ${CIRCLE_WORKFLOW_ID:0:7}"
           #--parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
-      
+
+             
       - persist_to_workspace:
           root: ~/
           paths: 
@@ -1025,11 +1036,31 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - run: yum install -y tar gzip
+
       - attach_workspace:
           at: ~/
+      
       - run:
-          name: Get old stack workflow id
+          name: Install Dependencies 
+          command: |
+            yum install -y tar gzip
+      
+      # - run:
+      #     name: Remove old stacks and files
+      #     command: |
+      #       # Fetch the stack names          
+      #       export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
+      #       --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+      #       echo Stack names: "${STACKS[@]}"  
+            
+      #       if [[ "${STACKS[@]}" =~ "${BlueBucketID}" ]]
+      #       then
+      #         aws s3 rm "s3://${BlueBucketID}" --recursive
+      #         aws cloudformation delete-stack --stack-name "udapeople-s3-blue-${CIRCLE_WORKFLOW_ID:0:7}"
+      #       fi
+
+      - run:
+          name: Fetch old stack workflow id
           command: |
             
             export OldWorkflowID=$(cat ~/OldWorkflowID.txt)
@@ -1037,31 +1068,19 @@ jobs:
 
             echo OldWorkflowID: "${OldWorkflowID}"
             echo CIRCLE_WORKFLOW_ID: "${CIRCLE_WORKFLOW_ID:0:7}"
-      
-      # - run:
-      #     name: Destroy the previous S3 bucket and CloudFormation stack. 
-      #     # Use $OldBucketID environment variable or mybucket644752792305 below.
-      #     # Similarly, you can create and use $OldStackID environment variable in place of production-distro 
-      #     command: |
-      #       export OldBucketID=$(cat ~/bucketID.txt)
-      #       aws s3 rm "s3://${OldBucketID}" --recursive
-      #       aws cloudformation delete-stack --stack-name "udapeople-s3-blue-${CIRCLE_WORKFLOW_ID:0:7}"
 
-      - run:
-          name: Remove old stacks and files
-          command: |
-            # Fetch the stack names          
-            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
-            --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
-            echo Stack names: "${STACKS[@]}"  
-            
-            if [[ "${STACKS[@]}" =~ "${BlueBucketID}" ]]
+            if [[ "${CIRCLE_WORKFLOW_ID:0:7}" != "${OldWorkflowID}" ]]
             then
-              aws s3 rm "s3://${BlueBucketID}" --recursive
-              aws cloudformation delete-stack --stack-name "udapeople-s3-blue-${CIRCLE_WORKFLOW_ID:0:7}"
-
+              echo "Delete in Progress..."
+              aws s3 rm "s3://${OldWorkflowID}" --recursive
+              aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}"
+              aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}"
+              echo "Delete Successful ✅"
+            
+            else
+              echo "Delete Not Successful ❌"
             fi
-
+      
 
   ###################################################
   # DESTROY AND SAVE RESOURCES                      #                                                 
@@ -1070,6 +1089,7 @@ jobs:
   #   without running any other jobs to delete all  #
   #   aws and database resources                    #
   ###################################################  
+  
   destroy-and-save-resources:
     docker:
       # Docker image here
