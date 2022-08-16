@@ -1037,13 +1037,14 @@ jobs:
     steps:
       - checkout
 
-      - attach_workspace:
-          at: ~/
-      
       - run:
           name: Install Dependencies 
           command: |
             yum install -y tar gzip
+      
+      - attach_workspace:
+          at: ~/
+      
       
       # - run:
       #     name: Remove old stacks and files
