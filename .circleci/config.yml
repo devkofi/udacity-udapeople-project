@@ -1089,7 +1089,6 @@ jobs:
   #   without running any other jobs to delete all  #
   #   aws and database resources                    #
   ###################################################  
-  
   destroy-and-save-resources:
     docker:
       # Docker image here
@@ -1144,7 +1143,6 @@ jobs:
               npm install
               npm run migrations:revert
             fi 
-
 
 
 ###################################################
