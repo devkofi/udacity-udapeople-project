@@ -1,0 +1,549 @@
+------------------------- SETUP PROMETHEUS SERVER -------------------------
+
+Link: https://codewizardly.com/prometheus-on-aws-ec2-part1/
+
+#################################
+#   CONFIGURE SECURITY GROUP    #
+#################################
+Open Ports on Inbound Traffic for the following:
+    9090
+    9093
+    9100
+
+
+###############################################
+#   SETUP AN EC2 MACHINE & SSH INTO SERVER    #
+#                                             #
+# Replace with correct DNS name               #
+###############################################
+
+ssh -i prometheus.pem ubuntu@ec2-3-17-28.53.us-east-2.compute.amazonaws.com
+
+
+##############################################
+#   CREATE A USER FOR PROMETHEUS SERVER      #
+##############################################
+sudo useradd --no-create-home prometheus
+sudo mkdir /etc/prometheus
+sudo mkdir /var/lib/prometheus
+
+
+############################
+#   INSTALL PROMETHEUS     #
+############################
+wget https://github.com/prometheus/prometheus/releases/download/v2.38.0/prometheus-2.38.0.linux-amd64.tar.gz
+tar xvfz prometheus-2.38.0.linux-amd64.tar.gz
+
+sudo cp prometheus-2.38.0.linux-amd64/prometheus /usr/local/bin
+sudo cp prometheus-2.38.0.linux-amd64/promtool /usr/local/bin/
+sudo cp -r prometheus-2.38.0.linux-amd64/consoles /etc/prometheus
+sudo cp -r prometheus-2.38.0.linux-amd64/console_libraries /etc/prometheus
+
+sudo cp prometheus-2.38.0.linux-amd64/promtool /usr/local/bin/
+rm -rf prometheus-2.38.0.linux-amd64.tar.gz prometheus-2.38.0.linux-amd64
+
+
+###############################################
+#   PROMETHEUS TO MONITOR ITSELF              #
+#                                             #
+# All what we need to do is create            # 
+# or replace the content of prometheus.yml    #
+###############################################
+
+cd /etc/prometheus/
+vim prometheus.yml 
+
+------------ Paste Content In prometheus.yml ---------------
+global:
+  scrape_interval: 15s
+  external_labels:
+    monitor: 'prometheus'
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+
+####################################
+#   PROMETHEUS TO RUN AS A SERVICE #
+####################################
+
+cd /etc/systemd/system/
+vim prometheus.service
+
+------------ Paste Content In prometheus.service ---------------
+
+[Unit]
+Description=Prometheus
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+ExecStart=/usr/local/bin/prometheus \
+    --config.file /etc/prometheus/prometheus.yml \
+    --storage.tsdb.path /var/lib/prometheus/ \
+    --web.console.templates=/etc/prometheus/consoles \
+    --web.console.libraries=/etc/prometheus/console_libraries
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+##############################################
+#   CHANGE PERMISSIONS OF DIRECTORIES, FILES #
+##############################################
+
+sudo chown prometheus:prometheus /etc/prometheus
+sudo chown prometheus:prometheus /usr/local/bin/prometheus
+sudo chown prometheus:prometheus /usr/local/bin/promtool
+sudo chown -R prometheus:prometheus /etc/prometheus/consoles
+sudo chown -R prometheus:prometheus /etc/prometheus/console_libraries
+sudo chown -R prometheus:prometheus /var/lib/prometheus
+
+
+##############################
+#   CONFIGURE TO RUN SERVICE #
+##############################
+
+sudo systemctl daemon-reload
+sudo systemctl enable prometheus
+sudo systemctl start prometheus
+sudo systemctl status prometheus
+
+
+
+------------------------- SETUP NODE EXPORTER -------------------------
+
+Link: https://codewizardly.com/prometheus-on-aws-ec2-part2/
+
+#################################
+#   CONFIGURE SECURITY GROUP    #
+#################################
+Open Ports on Inbound Traffic for the following:
+    9090
+    9093
+    9100
+
+
+###############################################
+#   SETUP AN EC2 MACHINE & SSH INTO SERVER    #
+#                                             #
+#   Replace with correct DNS name             #
+###############################################
+
+ssh -i prometheus.pem ubuntu@ec2-3-17-28.53.us-east-2.compute.amazonaws.com
+
+##############################################
+#   CREATE A USER FOR NODE EXPORTER         #
+##############################################
+sudo useradd --no-create-home node_exporter
+
+
+#########################################
+#   INSTALL NODE EXPORTER LIBRARIES     #
+#########################################
+
+wget https://github.com/prometheus/node_exporter/releases/download/v1.0.1/node_exporter-1.0.1.linux-amd64.tar.gz
+tar xzf node_exporter-1.0.1.linux-amd64.tar.gz
+sudo cp node_exporter-1.0.1.linux-amd64/node_exporter /usr/local/bin/node_exporter
+rm -rf node_exporter-1.0.1.linux-amd64.tar.gz node_exporter-1.0.1.linux-amd64
+
+
+
+#####################################
+#   CONFIGURE NODE EXPORTER SERVICE #
+#####################################
+
+cd /etc/systemd/system/
+vim node-exporter.service
+
+------------ Paste Content In node-exporter.service---------------
+
+[Unit]
+Description=Prometheus Node Exporter Service
+After=network.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+
+
+##############################
+#   CONFIGURE TO RUN SERVICE #
+##############################
+
+sudo systemctl daemon-reload
+sudo systemctl enable node-exporter
+sudo systemctl start node-exporter
+sudo systemctl status node-exporter
+
+<--------
+
+######################################
+#   SSH INTO PROMETHEUS SERVER AGAIN #
+#                                    #
+#  Replace with correct DNS name     #
+######################################
+
+ssh -i prometheus.pem ubuntu@ec2-3-17-28.53.us-east-2.compute.amazonaws.com
+
+
+###############################################
+#   RECEIVE METRICS FROM NODE EXPORTER        #
+#                                             #
+# Replace DNS value with Node Exporter DNS    # 
+# value                                       #
+###############################################
+
+cd /etc/prometheus/
+vim prometheus.yml 
+
+------------ Paste Content In prometheus.yml ---------------
+global:
+  scrape_interval: 15s
+  external_labels:
+    monitor: 'prometheus'
+
+scrape_configs:
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['ec2-13-58-127-241.us-east-2.compute.amazonaws.com:9100']
+
+
+###############################
+#   RESTART PROMETHEUS SERVER #
+###############################
+
+sudo systemctl restart prometheus
+
+
+##########################################     
+#   OPEN IN BROWSER OUTSIDE SERVER       #
+#                                        #
+# Replace DNS value with Prometheus DNS  #
+# server value                           #
+##########################################
+
+http://ec2-3-17-28.53.us-east-2.compute.amazonaws.com:9090/targets
+----------->
+
+
+
+
+------------------------- SERVICE DISCOVERY ON AWS EC2 -------------------------
+
+Link: https://codewizardly.com/prometheus-on-aws-ec2-part3/
+
+###########################
+#   CREATE AN IAM USER    #
+###########################
+
+1. Create an IAM user with programmatic access
+
+2. Attach an existing policy:
+        AmazonEC2ReadOnlyAccess
+
+3. Add tags
+        Key     : service
+        Value   : prometheus
+
+4. Save the credentials in a safe place
+
+
+############################################
+#   CONFIGURE PROMETHEUS SERVICE DISCOVERY #
+############################################
+
+1. Go back to Prometheus Server and change the configuration again
+
+    ssh -i prometheus.pem ubuntu@ec2-3-17-28.53.us-east-2.compute.amazonaws.com
+
+2. Edit prometheus.yml and paste content below
+    
+    cd /etc/prometheus/
+    vim prometheus.yml
+
+------------ Paste Content In prometheus.yml ---------------
+
+global:
+  scrape_interval: 1s
+  evaluation_interval: 1s
+
+scrape_configs:
+  - job_name: 'node'
+    ec2_sd_configs:
+      - region: us-east-1
+        access_key: PUT_THE_ACCESS_KEY_HERE
+        secret_key: PUT_THE_SECRET_KEY_HERE
+        port: 9100
+
+3. Restart Prometheus service.
+
+    sudo systemctl restart prometheus
+
+4. Open in Browser Outside Server
+
+    http://ec2-3-17-28.53.us-east-2.compute.amazonaws.com:9090/targets
+
+
+
+
+
+------------------------- ALERT MANAGER -------------------------
+
+######################################
+#   SSH INTO PROMETHEUS SERVER AGAIN #
+#                                    #
+#  Replace with correct DNS name     #
+######################################
+
+ssh -i prometheus.pem ubuntu@ec2-3-17-28.53.us-east-2.compute.amazonaws.com
+
+
+##############################
+#   INSTALL ALERT MANAGER    #
+##############################
+
+wget https://github.com/prometheus/alertmanager/releases/download/v0.24.0/alertmanager-0.24.0.linux-amd64.tar.gz
+tar xvfz alertmanager-0.24.0.linux-amd64.tar.gz
+
+sudo cp alertmanager-0.24.0.linux-amd64/alertmanager /usr/local/bin
+sudo cp alertmanager-0.24.0.linux-amd64/amtool /usr/local/bin/
+sudo mkdir /var/lib/alertmanager
+
+rm -rf alertmanager*
+
+
+################################################
+#   ADD ALERT MANAGER'S EMAIL CONFIGURATION    #
+################################################
+
+cd /etc/prometheus/
+vim alertmanager.yml
+
+------------ Paste Content In alertmanager.yml ---------------
+
+route:
+  group_by: [Alertname]
+  receiver: email-me
+
+receivers:
+- name: email-me
+  email_configs:
+  - to: EMAIL_YO_WANT_TO_SEND_EMAILS_TO
+    from: YOUR_EMAIL_ADDRESS
+    smarthost: smtp.gmail.com:587
+    auth_username: YOUR_EMAIL_ADDRESS
+    auth_identity: YOUR_EMAIL_ADDRESS
+    auth_password: YOUR_EMAIL_PASSWORD       #Use an app Pasword for Emails. Do not use your personal password
+
+
+#################################
+#   GENERATE AN APP PASSWORD    #
+#################################
+
+1. Navigate to the section on "Generate an App Password" using the link below
+
+    Link: https://codewizardly.com/prometheus-on-aws-ec2-part4/
+
+
+################################################
+#   ADD ALERT MANAGER'S SLACK CONFIGURATION    #
+################################################
+
+Link: https://grafana.com/blog/2020/02/25/step-by-step-guide-to-setting-up-prometheus-alertmanager-with-slack-pagerduty-and-gmail/
+
+Webhook: https://hooks.slack.com/services/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
+
+cd /etc/prometheus/
+vim alertmanager.yml
+
+------------ Paste Content In alertmanager.yml (SIMPLE ONE)---------------
+
+global:
+  resolve_timeout: 1m
+  slack_api_url: 'https://hooks.slack.com/services/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'
+
+route:
+  receiver: 'slack-notifications'
+
+receivers:
+- name: 'slack-notifications'
+  slack_configs:
+  - channel: '#monitoring'
+    send_resolved: true
+
+
+
+------------ Paste Content In alertmanager.yml (DETAILED ONE)---------------
+
+global:
+  resolve_timeout: 1m
+  slack_api_url: 'https://hooks.slack.com/services/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'
+
+route:
+  receiver: 'slack-notifications'
+
+receivers:
+- name: 'slack-notifications'
+  slack_configs:
+  - channel: '#monitoring'
+    send_resolved: true
+    icon_url: https://avatars3.githubusercontent.com/u/3380462
+    title: |-
+     [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }} for {{ .CommonLabels.job }}
+     {{- if gt (len .CommonLabels) (len .GroupLabels) -}}
+       {{" "}}(
+       {{- with .CommonLabels.Remove .GroupLabels.Names }}
+         {{- range $index, $label := .SortedPairs -}}
+           {{ if $index }}, {{ end }}
+           {{- $label.Name }}="{{ $label.Value -}}"
+         {{- end }}
+       {{- end -}}
+       )
+     {{- end }}
+    text: >-
+     {{ range .Alerts -}}
+     *Alert:* {{ .Annotations.title }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`{{ end }}
+
+     *Description:* {{ .Annotations.description }}
+
+     *Details:*
+       {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+       {{ end }}
+     {{ end }}
+
+###########################################
+#   CONFIGURE ALERT MANAGER AS A SERVICE  #
+###########################################
+
+cd /etc/systemd/system/
+vim alertmanager.service
+
+--------------- Paste Content In alertmanager.service ---------------
+
+[Unit]
+Description=Alert Manager
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=prometheus
+Group=prometheus
+ExecStart=/usr/local/bin/alertmanager \
+  --config.file=/etc/prometheus/alertmanager.yml \
+  --storage.path=/var/lib/alertmanager
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+
+########################
+#   CONFIGURE Systemd  #
+########################
+
+sudo systemctl daemon-reload
+sudo systemctl enable alertmanager
+sudo systemctl start alertmanager
+
+
+###########################
+#   CREATE AN ALERT RULE  #
+###########################
+
+** Alert when an instance is down for 3 minutes as follows: ***
+
+cd /etc/prometheus/
+vim rules.yml
+
+
+--------------- Paste Content In rules.yml ---------------
+
+groups:
+- name: Down
+  rules:
+  - alert: InstanceDown
+    expr: up == 0
+    for: 3m
+    labels:
+      severity: 'critical'
+    annotations:
+      summary: "Instance is down"
+      title: 'Instance {{ $labels.instance }} down'
+      description: '{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute.'
+
+
+###########################
+#   CONFIGURE PROMETHEUS  #
+###########################
+
+sudo chown -R prometheus:prometheus /etc/prometheus
+
+
+######################################
+#   UPDATE PROMETHEUS CONFIGURATION  #
+######################################
+
+cd /etc/prometheus/
+vim prometheus.yml
+
+
+--------------- Paste Content In prometheus.yml ---------------
+
+global:
+  scrape_interval: 1s
+  evaluation_interval: 1s
+
+rule_files:
+ - /etc/prometheus/rules.yml
+
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - localhost:9093
+
+scrape_configs:
+  - job_name: 'node'
+    ec2_sd_configs:
+      - region: us-east-1
+        access_key: PUT_THE_ACCESS_KEY_HERE
+        secret_key: PUT_THE_SECRET_KEY_HERE
+        port: 9100
+
+#####################
+#   RELOAD Systemd  #
+#####################
+
+sudo systemctl restart prometheus
+
+
+##########################################     
+#   OPEN IN BROWSER OUTSIDE SERVER       #
+#                                        #
+# Replace DNS value with Prometheus DNS  #
+# server value                           #
+##########################################
+
+1. Turn off(Stop) the Node Exporter AWS EC2 Instance
+
+2. Wait for 3 minutes and check the Alertmanager URL that is installed in your
+http://ec2-3-17-28.53.us-east-2.compute.amazonaws.com:9093/#/alerts
+
+3. Check your email
+
+*********** As always, remember that you need to use a different URL depending on your AWS EC2 instance details ************
+
