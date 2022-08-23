@@ -549,6 +549,7 @@ jobs:
           command: |
             ls -la
             cd .circleci/ansible/
+            cp ./backend/production.env .circleci/ansible/roles/configure-server/files/
             ansible-playbook -i inventory.txt configure-server.yml
       
       - destroy-environment
@@ -821,7 +822,6 @@ jobs:
       - run:
           name: Export to ansible for operations
           command: |
-            cp ./backend/.env .circleci/ansible/roles/deploy/files/
             mv artifact.tar.gz .circleci/ansible/roles/deploy/files/artifact.tar.gz
             echo "<---------- Checking to see file exists ------------>"
             ls -al .circleci/ansible/roles/deploy/files/
