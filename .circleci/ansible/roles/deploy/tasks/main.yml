@@ -40,8 +40,6 @@
   shell: |
     #mv backend web
     cp -r backend/* web
-    cd web
-    mv production.env .env
 
 - name: "Start server"
   become: true

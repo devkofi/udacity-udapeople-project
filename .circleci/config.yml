@@ -547,9 +547,9 @@ jobs:
       - run:
           name: Run Playbook
           command: |
-            ls -la
-            cd .circleci/ansible/
+            ls -laR
             cp ./backend/production.env .circleci/ansible/roles/configure-server/files/
+            cd .circleci/ansible/
             ansible-playbook -i inventory.txt configure-server.yml
       
       - destroy-environment
