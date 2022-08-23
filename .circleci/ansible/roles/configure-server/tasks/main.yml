@@ -49,11 +49,6 @@
     src: "files/index-new.js"
     dest: "/home/ubuntu/web/index-new.js"
 
-- name: Copy production.env to web directory
-  copy:
-    src: "files/production.env"
-    dest: "/home/ubuntu/.env"
-
 - name: Start server @ port 3000
   shell: |
     pm2 start /home/ubuntu/web/index.js -f

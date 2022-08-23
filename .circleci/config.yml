@@ -548,7 +548,6 @@ jobs:
           name: Run Playbook
           command: |
             ls -laR
-            cp ./backend/production.env .circleci/ansible/roles/configure-server/files/
             cd .circleci/ansible/
             ansible-playbook -i inventory.txt configure-server.yml
       
