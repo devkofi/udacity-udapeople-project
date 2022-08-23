@@ -44,6 +44,11 @@
     src: "files/index.js"
     dest: "/home/ubuntu/web/index.js"
 
+- name: Copy index-new.js to web directory
+  copy:
+    src: "files/index-new.js"
+    dest: "/home/ubuntu/web/index-new.js"
+
 - name: Start server @ port 3030
   shell: |
     pm2 start /home/ubuntu/web/index.js -f

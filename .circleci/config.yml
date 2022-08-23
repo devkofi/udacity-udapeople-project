@@ -622,15 +622,15 @@ jobs:
               echo ❌ Pending Migrations
             fi
                   
-      # - persist_to_workspace:
-      #       root: ./backend
-      #       paths:
-      #         - .env
-
       - persist_to_workspace:
-            root: .
+            root: ./backend
             paths:
-              - backend/*
+              - .env
+
+      # - persist_to_workspace:
+      #       root: .
+      #       paths:
+      #         - backend/*
      # Here's where you will add some code to rollback on failure      
       - destroy-environment
 
@@ -753,6 +753,9 @@ jobs:
 
       - attach_workspace:
           at: ./.circleci/ansible/
+
+      - attach_workspace:
+          at: ./backend    
       
       # Add ssh keys with fingerprint
       - add_ssh_keys:

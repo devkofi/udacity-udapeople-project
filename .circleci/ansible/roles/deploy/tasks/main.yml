@@ -38,7 +38,8 @@
 - name: "Rename directory from backend to web"
   become: true
   shell: |
-    mv backend web
+    #mv backend web
+    cp -r backend/* web
 
 - name: "Start server"
   become: true
