@@ -4,4 +4,4 @@ res.writeHead(200);
 res.end("Project 3 - Udapeople by Kofi Nyarko Kumi!");
 });
 
-server.listen(3030);
+server.listen(3000);

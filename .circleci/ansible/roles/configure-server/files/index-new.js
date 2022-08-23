@@ -10,4 +10,4 @@ app.get("/data", (req, res) => {
     res.json("Project 3 - Udapeople by Kofi Nyarko Kumi!")
 });
 
-app.listen(3030);
+app.listen(3000);
