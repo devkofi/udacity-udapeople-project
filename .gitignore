@@ -72,4 +72,4 @@ tempFile.yml
 _SCREENSHOTS/
 prometheus/
 prometheous.txt
-backend/.env
+backend/production.env
