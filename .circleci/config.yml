@@ -724,7 +724,7 @@ jobs:
             npm run build
             ls -la
             ls -la dist
-            sed -i 's/<meta charset="utf-8">/<meta charset="utf-8">\n<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">/g' dist/index.html
+            #sed -i 's/<meta charset="utf-8">/<meta charset="utf-8">\n  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">/g' dist/index.html
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       #aws s3 cp dist s3://udapeople-kk1j287dhjp437knk --recursive
