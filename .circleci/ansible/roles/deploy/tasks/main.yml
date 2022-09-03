@@ -45,4 +45,5 @@
   become: true
   shell: |
     cd web
+    cp production .env
     pm2 start npm -- start
