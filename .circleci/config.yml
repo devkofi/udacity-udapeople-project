@@ -801,7 +801,7 @@ jobs:
             npm --version      
 
       - run:
-          name: Environment Variables
+          name: Create Environment Variables
           command: |
             cd backend
             echo "NODE_ENV=local" > .env
