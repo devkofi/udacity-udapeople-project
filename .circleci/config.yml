@@ -724,6 +724,7 @@ jobs:
             npm run build
             ls -la
             ls -la dist
+            sed -i 's/<meta charset="utf-8">/<meta charset="utf-8">\n<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">/g' dist/index.html
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       #aws s3 cp dist s3://udapeople-kk1j287dhjp437knk --recursive
@@ -798,15 +799,35 @@ jobs:
             sudo apt install -y nodejs npm
             node --version
             npm --version      
-      
+
+      - run:
+          name: Environment Variables
+          command: |
+            cd backend
+            echo "NODE_ENV=local" > .env
+            echo "VERSION=1" >> .env
+            echo "TYPEORM_CONNECTION=$TYPEORM_CONNECTION" >> .env
+            echo "TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR" >> .env
+            echo "TYPEORM_ENTITIES=$TYPEORM_ENTITIES" >> .env
+            echo "TYPEORM_MIGRATIONS=$TYPEORM_MIGRATIONS" >> .env
+            echo "TYPEORM_HOST=$TYPEORM_HOST" >> .env
+            echo "TYPEORM_PORT=$TYPEORM_PORT" >> .env
+            echo "TYPEORM_USERNAME=$TYPEORM_USERNAME" >> .env
+            echo "TYPEORM_PASSWORD=$TYPEORM_PASSWORD" >> .env
+            echo "TYPEORM_DATABASE=$TYPEORM_DATABASE" >> .env
+            cp .env production
+            cat .env
+            cat production
+
       - run:
           name: Baking at this point...
           command: |
+            ls -la
             cd backend
             ls -la
             npm install
             npm run build
-            
+      
       - run:
           name: Zip Backend Directory including node_modules directory for Export
           command: |
