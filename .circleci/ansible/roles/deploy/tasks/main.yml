@@ -40,6 +40,11 @@
   shell: |
     #mv backend web
     cp -r backend/* web
+    
+- name: "Remove backend directory"
+  become: true
+  shell: |
+    rm -rf backend
 
 - name: "Start server"
   become: true
