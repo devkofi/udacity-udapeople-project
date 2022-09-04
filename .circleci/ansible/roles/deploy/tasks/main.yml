@@ -51,4 +51,4 @@
   shell: |
     cd web
     cp production .env
-    pm2 start npm -- start
+    #pm2 start npm -- start
